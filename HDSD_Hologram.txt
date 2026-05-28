@@ -1,0 +1,57 @@
+=========================================================
+      HƯỚNG DẪN SỬ DỤNG: SOLAR SYSTEM HOLOGRAM 3D
+=========================================================
+
+---------------------------------------------------------
+I. CHUẨN BỊ
+---------------------------------------------------------
+1. Mở phần mềm (file .exe). Hãy đảm bảo laptop của bạn có Webcam.
+2. Chấp nhận quyền sử dụng Camera (nếu có yêu cầu).
+
+---------------------------------------------------------
+II. THAO TÁC Ở SẢNH (GIAO DIỆN HỆ MẶT TRỜI)
+---------------------------------------------------------
+1. ĐỂ XOAY HỆ MẶT TRỜI:
+   - Dùng 1 BÀN TAY PHẢI (Mở xòe 5 ngón).
+   - Vuốt (di chuyển tay) sang Trái/Phải/Lên/Xuống trên không trung để xoay toàn bộ Hệ Mặt Trời theo hướng tay của bạn.
+
+2. ĐỂ LÔI / DI CHUYỂN TOÀN BỘ HỆ MẶT TRỜI:
+   - Đưa cả 2 tay lên thành 2 NẮM ĐẤM (0 ngón).
+   - Tay trái giữ nguyên làm mốc, tay phải kéo nắm đấm đi xung quanh để lôi Hệ Mặt Trời sang vị trí khác.
+
+3. ĐỂ PHÓNG TO / THU NHỎ (ZOOM):
+   - Tay Trái: Nắm đấm.
+   - Tay Phải: Dùng 2 ngón (Ngón trỏ & Ngón cái) kẹp lại với nhau (Pinch).
+   - Kéo mở 2 ngón tay phải ra xa để Phóng to, và chụm lại để Thu nhỏ (giống hệt thao tác zoom trên màn hình điện thoại).
+
+4. CHỌN HÀNH TINH (ĐỂ XEM CẬN CẢNH):
+   - Giơ ngón tay lên và GIỮ YÊN trong khoảng 1.5 giây (Sẽ có thanh màu xanh chạy đầy tiến trình trên màn hình).
+   - Bảng mã số ngón tay:
+       [BÀN TAY PHẢI]
+         1 ngón: Mặt Trời ☀️
+         2 ngón: Sao Thủy 🪐
+         3 ngón: Sao Kim  🪐
+         4 ngón: Trái Đất 🌍
+         5 ngón: Sao Hỏa  🔴
+       [BÀN TAY TRÁI]
+         1 ngón: Sao Mộc  🟤
+         2 ngón: Sao Thổ  🪐
+         3 ngón: Sao Thiên Vương 🔵
+         4 ngón: Sao Hải Vương   🌑
+
+---------------------------------------------------------
+III. THAO TÁC KHI XEM CẬN CẢNH HÀNH TINH (FOCUS MODE)
+---------------------------------------------------------
+Khi đã chọn 1 hành tinh, bạn sẽ vào chế độ xem chi tiết.
+Ở chế độ này, bạn sẽ thấy 2 nút chức năng ở dưới cùng màn hình (dùng chuột để click):
+  - Nút ℹ️: Bật/tắt Bảng thông tin chi tiết của hành tinh (nằm ở nửa phải màn hình).
+  - Nút 📷 / 🎥: Bật/tắt hiển thị luồng Camera nhận diện bàn tay.
+1. XOAY HÀNH TINH: Vuốt 1 bàn tay phải (giống thao tác ở Sảnh) để xoay tròn và ngắm nhìn các châu lục/địa hình.
+2. PHÓNG TO / THU NHỎ: Tay trái Nắm đấm + Tay phải bóp/mở 2 ngón (giống hệt thao tác ở Sảnh).
+3. LÔI / DI CHUYỂN HÀNH TINH (MỚI):
+   - Đưa cả 2 tay lên thành 2 NẮM ĐẤM (0 ngón).
+   - Tương tự như ở Sảnh, giữ nguyên tay trái và kéo tay phải để dời hành tinh sang các vị trí khác trên màn hình (Hữu ích khi bạn muốn di chuyển lăng kính). Mở/đóng Tab thông tin sẽ đưa hành tinh tự động trượt về lại tâm.
+
+4. ĐỂ QUAY VỀ SẢNH: 
+   - Đưa Bàn Tay Phải lên và NẮM ĐẤM LẠI. 
+   - Giữ yên nắm đấm trong vài giây để thoát ra ngoài.
