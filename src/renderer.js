@@ -179,8 +179,8 @@ scene.add(modelGroup);
 // Overview camera
 let overviewZoomFactor = 1.0;
 let targetOverviewZoomFactor = 1.0;
-const overviewBasePos = new THREE.Vector3(0, 62.5, 42.5);
-const overviewLook = new THREE.Vector3(9, 10.5, 0);
+let overviewBasePos = new THREE.Vector3(0, 62.5, 42.5);
+let overviewLook = new THREE.Vector3(9, 10.5, 0);
 
 let moonPivot = null;
 let moonOrbitLine = null;
@@ -197,37 +197,108 @@ const focusModelGroup = new THREE.Group();
 focusModelGroup.visible = false;
 scene.add(focusModelGroup);
 
-// Hologram physical center calibration offsets (in pixels)
-let focusOffsetXClosed = -195;
-let focusOffsetYClosed = 100;
-let focusOffsetXOpen = -580;
-let focusOffsetYOpen = 105;
+// Hologram physical center calibration offsets (in percentages of screen width/height to support different resolutions)
+// MATHEMATICALLY PERFECT DEFAULTS: 
+// 0 = perfectly centered. 
+// -0.25 = perfectly centered in the left 50% of the screen (when Info Panel is open).
+let focusPctXClosed = 0;
+let focusPctYClosed = 0;
+let focusPctXOpen = -0.25; 
+let focusPctYOpen = 0;
 
-// Current interpolated offsets for rendering
-let currentFocusOffsetX = focusOffsetXClosed;
-let currentFocusOffsetY = focusOffsetYClosed;
+// Current interpolated percentages for rendering
+let currentFocusPctX = focusPctXClosed;
+let currentFocusPctY = focusPctYClosed;
+
+let overviewPctX = 0;
+let overviewPctY = 0;
+
+// Load saved calibration from local storage
+const savedCalib = localStorage.getItem('hologramCalibration');
+if (savedCalib) {
+    try {
+        const parsed = JSON.parse(savedCalib);
+        if (parsed.overviewPctX !== undefined) overviewPctX = parsed.overviewPctX;
+        if (parsed.overviewPctY !== undefined) overviewPctY = parsed.overviewPctY;
+        if (parsed.overviewZoomFactor !== undefined) {
+            targetOverviewZoomFactor = parsed.overviewZoomFactor;
+            overviewZoomFactor = parsed.overviewZoomFactor;
+        }
+        if (parsed.focusPctXClosed !== undefined) focusPctXClosed = parsed.focusPctXClosed;
+        if (parsed.focusPctYClosed !== undefined) focusPctYClosed = parsed.focusPctYClosed;
+        if (parsed.focusPctXOpen !== undefined) focusPctXOpen = parsed.focusPctXOpen;
+        if (parsed.focusPctYOpen !== undefined) focusPctYOpen = parsed.focusPctYOpen;
+        if (parsed.focusZoomFactor !== undefined) {
+            targetFocusZoomFactor = parsed.focusZoomFactor;
+            focusZoomFactor = parsed.focusZoomFactor;
+        }
+        currentFocusPctX = focusPctXClosed;
+        currentFocusPctY = focusPctYClosed;
+    } catch (e) {
+        console.error("Failed to parse calibration", e);
+    }
+}
 
 // Calibration via Arrow Keys (updates the active state)
 window.addEventListener('keydown', (e) => {
-    if (!inPlanetFocus) return;
-    const step = 5; // 5 pixels per tap
+    // SAVE HOTKEY
+    if (e.key === 's' || e.key === 'S') {
+        const calibrationData = {
+            overviewPctX, overviewPctY,
+            overviewZoomFactor: targetOverviewZoomFactor,
+            focusPctXClosed, focusPctYClosed,
+            focusPctXOpen, focusPctYOpen,
+            focusZoomFactor: targetFocusZoomFactor
+        };
+        localStorage.setItem('hologramCalibration', JSON.stringify(calibrationData));
+        console.log("CALIBRATION SAVED!", calibrationData);
+        setGestureHUD("ĐÃ LƯU CALIBRATION!");
+        return;
+    }
+
+    // RESET HOTKEY
+    if (e.key === 'r' || e.key === 'R') {
+        localStorage.removeItem('hologramCalibration');
+        overviewPctX = 0; overviewPctY = 0; targetOverviewZoomFactor = 1.0; overviewZoomFactor = 1.0;
+        focusPctXClosed = 0; focusPctYClosed = 0; 
+        focusPctXOpen = -0.25; focusPctYOpen = 0; targetFocusZoomFactor = 1.0; focusZoomFactor = 1.0;
+        currentFocusPctX = focusPctXClosed; currentFocusPctY = focusPctYClosed;
+        console.log("CALIBRATION RESET!");
+        setGestureHUD("ĐÃ RESET VỀ MẶC ĐỊNH!");
+        return;
+    }
+
+    const stepX = 5 / window.innerWidth;  // 5 pixels in percentage
+    const stepY = 5 / window.innerHeight;
+    
+    if (!inPlanetFocus) {
+        // Calibrate Overview mode
+        if (e.key === 'ArrowLeft') overviewPctX -= stepX;
+        if (e.key === 'ArrowRight') overviewPctX += stepX;
+        if (e.key === 'ArrowUp') overviewPctY -= stepY;
+        if (e.key === 'ArrowDown') overviewPctY += stepY;
+        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+            console.log(`[CALIBRATION OVERVIEW] pctX: ${(overviewPctX*100).toFixed(2)}% | pctY: ${(overviewPctY*100).toFixed(2)}%`);
+        }
+        return;
+    }
     
     // Update the state that is currently active
     if (isInfoPanelVisible) {
-        if (e.key === 'ArrowLeft') focusOffsetXOpen -= step;
-        if (e.key === 'ArrowRight') focusOffsetXOpen += step;
-        if (e.key === 'ArrowUp') focusOffsetYOpen -= step;
-        if (e.key === 'ArrowDown') focusOffsetYOpen += step;
+        if (e.key === 'ArrowLeft') focusPctXOpen -= stepX;
+        if (e.key === 'ArrowRight') focusPctXOpen += stepX;
+        if (e.key === 'ArrowUp') focusPctYOpen -= stepY;
+        if (e.key === 'ArrowDown') focusPctYOpen += stepY;
         if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-            console.log(`[CALIBRATION OPEN] offsetX: ${focusOffsetXOpen}px | offsetY: ${focusOffsetYOpen}px`);
+            console.log(`[CALIBRATION OPEN] pctX: ${(focusPctXOpen*100).toFixed(2)}% | pctY: ${(focusPctYOpen*100).toFixed(2)}%`);
         }
     } else {
-        if (e.key === 'ArrowLeft') focusOffsetXClosed -= step;
-        if (e.key === 'ArrowRight') focusOffsetXClosed += step;
-        if (e.key === 'ArrowUp') focusOffsetYClosed -= step;
-        if (e.key === 'ArrowDown') focusOffsetYClosed += step;
+        if (e.key === 'ArrowLeft') focusPctXClosed -= stepX;
+        if (e.key === 'ArrowRight') focusPctXClosed += stepX;
+        if (e.key === 'ArrowUp') focusPctYClosed -= stepY;
+        if (e.key === 'ArrowDown') focusPctYClosed += stepY;
         if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-            console.log(`[CALIBRATION CLOSED] offsetX: ${focusOffsetXClosed}px | offsetY: ${focusOffsetYClosed}px`);
+            console.log(`[CALIBRATION CLOSED] pctX: ${(focusPctXClosed*100).toFixed(2)}% | pctY: ${(focusPctYClosed*100).toFixed(2)}%`);
         }
     }
 });
@@ -424,6 +495,46 @@ function slidePanelSwitch(newIdx) {
     }, 230);
 }
 
+function getDepth(obj, root) {
+    let d = 0;
+    while (obj !== root && obj.parent) { d++; obj = obj.parent; }
+    return d;
+}
+
+function autoFitCamera() {
+    // Calculate bounding box of the entire solar system
+    const box = new THREE.Box3().setFromObject(modelGroup);
+    const size = new THREE.Vector3();
+    const center = new THREE.Vector3();
+    box.getSize(size);
+    box.getCenter(center);
+
+    // Solar system is on the XZ plane, get max width
+    const maxDim = Math.max(size.x, size.z);
+
+    // Calculate camera distance to fit scene with current FOV
+    const W = threeRenderer.domElement.width;
+    const H = threeRenderer.domElement.height;
+    const aspect = W / H;
+    const fovRad = overviewCam.fov * (Math.PI / 180);
+    // Adjust for aspect ratio
+    const hFovRad = 2 * Math.atan(Math.tan(fovRad / 2) * aspect);
+    const minFov = Math.min(fovRad, hFovRad);
+    const fitDist = (maxDim / 2) / Math.tan(minFov / 2) * 1.15; // 1.15 = padding
+
+    // 60 degree elevation angle
+    const elevAngle = Math.PI / 3;
+    const camY = fitDist * Math.sin(elevAngle);
+    const camZ = fitDist * Math.cos(elevAngle);
+    const camX = 0; // The Sun is always at 0
+
+    // Update base target pos
+    overviewBasePos.set(camX, camY, camZ);
+    overviewLook.set(0, 0, 0); // Always look at the Sun
+
+    console.log(`🎥 Auto-fit: pos=(${camX.toFixed(1)}, ${camY.toFixed(1)}, ${camZ.toFixed(1)}) | scene maxDim=${maxDim.toFixed(1)} | fitDist=${fitDist.toFixed(1)}`);
+}
+
 // ============================================================
 // 6. PRELOAD ALL PLANET MODELS
 // ============================================================
@@ -486,12 +597,6 @@ function preloadPlanetModels() {
 // ============================================================
 // 8. GLB LOADING (Solar System)
 // ============================================================
-function getDepth(obj, root) {
-    let depth = 0, cur = obj.parent;
-    while (cur && cur !== root && depth < 20) { depth++; cur = cur.parent; }
-    return depth;
-}
-
 function loadSolarSystem() {
     const loader = new GLTFLoader();
     const modelPath = path.join(__dirname, '../models', 'solar_system.glb');
@@ -620,6 +725,8 @@ function loadSolarSystem() {
                 if (orbitalPivots[i]) orbitalPivots[i].initQuat.copy(orbitalPivots[i].pivotObj.quaternion);
             }
         }
+
+        autoFitCamera();
 
         solarSystemLoaded = true;
         window.__solarLoaded = true;
@@ -776,9 +883,14 @@ function renderFrame() {
     const W = threeRenderer.domElement.width;
     const H = threeRenderer.domElement.height;
 
+    // Convert overview offset
+    const overviewOffsetX = overviewPctX * W;
+    const overviewOffsetY = overviewPctY * H;
+
     if (transitionProgress < 0.02) {
         // Pure overview
         overviewCam.aspect = W / H;
+        overviewCam.setViewOffset(W, H, -overviewOffsetX, -overviewOffsetY, W, H);
         overviewCam.updateProjectionMatrix();
         scene.background = new THREE.Color(0x000008);
         threeRenderer.setScissorTest(false);
@@ -787,11 +899,15 @@ function renderFrame() {
         return;
     }
 
-    // Interpolate offsets smoothly
-    const targetOffsetX = isInfoPanelVisible ? focusOffsetXOpen : focusOffsetXClosed;
-    const targetOffsetY = isInfoPanelVisible ? focusOffsetYOpen : focusOffsetYClosed;
-    currentFocusOffsetX = THREE.MathUtils.lerp(currentFocusOffsetX, targetOffsetX, 0.1);
-    currentFocusOffsetY = THREE.MathUtils.lerp(currentFocusOffsetY, targetOffsetY, 0.1);
+    // Interpolate percentages smoothly
+    const targetPctX = isInfoPanelVisible ? focusPctXOpen : focusPctXClosed;
+    const targetPctY = isInfoPanelVisible ? focusPctYOpen : focusPctYClosed;
+    currentFocusPctX = THREE.MathUtils.lerp(currentFocusPctX, targetPctX, 0.1);
+    currentFocusPctY = THREE.MathUtils.lerp(currentFocusPctY, targetPctY, 0.1);
+
+    // Convert to pixel offsets based on current screen dimensions
+    const currentFocusOffsetX = currentFocusPctX * W;
+    const currentFocusOffsetY = currentFocusPctY * H;
 
     if (transitionProgress > 0.98) {
         // Pure focus: always full screen, position based on interpolated offset
@@ -809,6 +925,7 @@ function renderFrame() {
 
     // Transitioning: Full-screen overview (background)
     overviewCam.aspect = W / H;
+    overviewCam.setViewOffset(W, H, -overviewOffsetX, -overviewOffsetY, W, H);
     overviewCam.updateProjectionMatrix();
     scene.background = new THREE.Color(0x000008);
     threeRenderer.setScissorTest(false);
@@ -844,8 +961,13 @@ preloadPlanetModels();
 animate();
 
 window.addEventListener('resize', () => {
-    const w = container.clientWidth, h = container.clientHeight;
+    const w = container.clientWidth;
+    const h = container.clientHeight;
     threeRenderer.setSize(w, h);
     overviewCam.aspect = w / h;
     overviewCam.updateProjectionMatrix();
+    focusCam.aspect = w / h;
+    focusCam.updateProjectionMatrix();
+
+    if (solarSystemLoaded) autoFitCamera();
 });
