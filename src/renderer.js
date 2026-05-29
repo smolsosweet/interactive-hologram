@@ -661,7 +661,7 @@ function animate() {
     requestAnimationFrame(animate);
     const delta = Math.min(clock.getDelta(), 0.05);
     if (mixer) mixer.update(delta);
-    // updateOrbits(delta); // Orbit logic will be added later
+    updateOrbits(delta);
 
     // Update planet model mixers (for models with built-in animations)
     if (inPlanetFocus && focusIndex >= 0) {
