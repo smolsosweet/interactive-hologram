@@ -592,7 +592,139 @@ function preloadPlanetModels() {
     });
 }
 
-// Focus features will be implemented here...
+// ============================================================
+// 7. FOCUS ENTER / EXIT / SWITCH
+// ============================================================
+function enterPlanetFocus(idx) {
+    if (idx < 0 || idx >= 9 || !planetModelCache[idx]) return;
+
+    const wasInFocus = inPlanetFocus;
+    const wasSameIdx = focusIndex === idx;
+    if (wasInFocus && wasSameIdx) return; // already viewing this planet
+
+    // If switching planets while already in focus
+    if (wasInFocus && !wasSameIdx) {
+        switchPlanetModel(idx);
+        slidePanelSwitch(idx);
+        focusIndex = idx;
+        updateHUD();
+        return;
+    }
+
+    // Fresh entry from overview
+    focusIndex = idx;
+    inPlanetFocus = true;
+    transitionTarget = 1;
+
+    // Reset focus rotation and zoom
+    focusModelGroup.position.set(0, 0, 0);
+    focusSpinner.quaternion.identity();
+    focusSpinner.rotation.set(0, 0, 0);
+    focusZoomFactor = 1.0;
+    targetFocusZoomFactor = 1.0;
+    focusRotVelX = 0;
+    focusRotVelY = 0;
+
+    // Set camera position immediately
+    const baseDist = 5.0;
+    focusCamDist = baseDist * focusZoomFactor;
+    focusCam.position.set(0, 0, focusCamDist);
+    focusCam.lookAt(0, 0, 0);
+
+    // Reset pan
+    focusPanTarget.set(0, 0, 0);
+    focusPanOffset.set(0, 0, 0);
+    focusModelGroup.position.set(0, 0, 0);
+
+    // Hide solar system sunLight to prevent illumination from inside model
+    sunLight.visible = false;
+
+    // Place model in focus spinner
+    setFocusModel(idx);
+
+    // Show panel
+    showPlanetPanel(idx);
+    updateHUD();
+
+    // ── DEBUG: Focus mode entry ──
+    const model = planetModelCache[idx];
+    if (model) {
+        const box = new THREE.Box3().setFromObject(model);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        console.log(`\n🔍 ══ FOCUS DEBUG [${PLANET_NAMES[idx]}] ══`);
+        console.log(`  Model BBox center: (${center.x.toFixed(3)}, ${center.y.toFixed(3)}, ${center.z.toFixed(3)})`);
+        console.log(`  Model BBox size:   (${size.x.toFixed(3)}, ${size.y.toFixed(3)}, ${size.z.toFixed(3)})`);
+        console.log(`  Model scale:       ${planetModelScales[idx].toFixed(4)}`);
+        console.log(`  FocusGroup pos:    (${focusModelGroup.position.x}, ${focusModelGroup.position.y}, ${focusModelGroup.position.z})`);
+        console.log(`  FocusCam pos:      (${focusCam.position.x.toFixed(2)}, ${focusCam.position.y.toFixed(2)}, ${focusCam.position.z.toFixed(2)})`);
+        console.log(`  FocusCamDist:      ${focusCamDist.toFixed(2)}`);
+        console.log(`  FocusZoom:         ${focusZoomFactor}`);
+        const W = threeRenderer.domElement.width, H = threeRenderer.domElement.height;
+        const panelFrac = 0.44;
+        const leftW = Math.round(W * (1 - panelFrac));
+        console.log(`  Canvas:            ${W} x ${H}`);
+        console.log(`  Left viewport:     ${leftW} x ${H} (center at x=${Math.round(leftW / 2)})`);
+        console.log(`══════════════════════════════════\n`);
+    }
+}
+
+function exitPlanetFocus() {
+    if (!inPlanetFocus) return;
+    inPlanetFocus = false;
+    transitionTarget = 0;
+    focusIndex = -1;
+
+    // Restore solar system sunLight
+    sunLight.visible = true;
+
+    hidePlanetPanel();
+    updateHUD();
+
+    // Clear model after transition (delayed)
+    setTimeout(() => {
+        if (!inPlanetFocus) {
+            clearFocusModel();
+        }
+    }, 800);
+}
+
+function setFocusModel(idx) {
+    clearFocusModel();
+    const model = planetModelCache[idx];
+    if (!model) return;
+    focusSpinner.add(model);     // model goes in spinner, not directly in focusModelGroup
+    focusModelGroup.visible = true;
+}
+
+function clearFocusModel() {
+    // Remove all children from focusSpinner (models only)
+    const toRemove = [];
+    focusSpinner.children.forEach(c => toRemove.push(c));
+    toRemove.forEach(c => focusSpinner.remove(c));
+}
+
+function switchPlanetModel(newIdx) {
+    const oldModel = planetModelCache[focusIndex];
+    const newModel = planetModelCache[newIdx];
+    if (!newModel) return;
+
+    // Swap model in focusSpinner
+    if (oldModel && focusSpinner.children.includes(oldModel)) {
+        focusSpinner.remove(oldModel);
+    }
+    focusSpinner.add(newModel);
+
+    // Reset spinner rotation for fresh view
+    focusSpinner.quaternion.identity();
+    focusSpinner.rotation.set(0, 0, 0);
+    focusZoomFactor = 1.0;
+    focusRotVelX = 0;
+    focusRotVelY = 0;
+    focusPanTarget.set(0, 0, 0);
+    focusPanOffset.set(0, 0, 0);
+    focusModelGroup.position.set(0, 0, 0);
+}
 
 // ============================================================
 // 8. GLB LOADING (Solar System)
@@ -1111,7 +1243,12 @@ function animate() {
         modelGroup.quaternion.premultiply(qX).premultiply(qY);
     }
 
-    // Zoom logic will be implemented here
+    // Smooth Zoom Lerping - reduced lerp factor for softer, less stiff feel
+    overviewZoomFactor = THREE.MathUtils.lerp(overviewZoomFactor, targetOverviewZoomFactor, 0.08);
+    focusZoomFactor = THREE.MathUtils.lerp(focusZoomFactor, targetFocusZoomFactor, 0.08);
+
+    // Overview camera position
+    const currentOverviewPos = overviewLook.clone().lerp(overviewBasePos, overviewZoomFactor);
     // Multiply panOffset by zoomFactor to perfectly maintain perspective angle
     const currentPan = panOffset.clone().multiplyScalar(overviewZoomFactor);
     
