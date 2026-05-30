@@ -749,7 +749,299 @@ function updateOrbits(delta) {
     }
 }
 
-// MediaPipe Gesture System will be implemented here...
+// ============================================================
+// 10. GESTURE SYSTEM
+// ============================================================
+function isThumbExtended(lm) {
+    return Math.hypot(lm[4].x - lm[5].x, lm[4].y - lm[5].y)
+        > Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y) * 0.55;
+}
+function countFingersAll(lm) {
+    let n = 0;
+    if (isThumbExtended(lm)) n++;
+    if (lm[8].y < lm[6].y) n++;
+    if (lm[12].y < lm[10].y) n++;
+    if (lm[16].y < lm[14].y) n++;
+    if (lm[20].y < lm[18].y) n++;
+    return n;
+}
+function isRightHand(handedness) {
+    // In a raw front-facing webcam feed (unmirrored), a physical right hand looks structurally like a left hand.
+    return handedness.label === 'Left';
+}
+
+// Stabilization buffer: require N consecutive identical readings before accepting a new finger count
+// This prevents flickering between 3↔4 fingers etc.
+const FINGER_STABLE_FRAMES = 3; // require 3 consecutive same readings
+let stableFingerCount = -1;
+let stableFingerCandidate = -1;
+let stableFingerStreak = 0;
+
+function getStableFingerCount(rawCount) {
+    if (rawCount === stableFingerCandidate) {
+        stableFingerStreak++;
+        if (stableFingerStreak >= FINGER_STABLE_FRAMES) {
+            stableFingerCount = rawCount;
+        }
+    } else {
+        stableFingerCandidate = rawCount;
+        stableFingerStreak = 1;
+    }
+    return stableFingerCount;
+}
+
+function fingersToPlanetIdx(fingers, isRight) {
+    if (fingers <= 0) return -1;
+    if (isRight) {
+        return fingers - 1; // Right 1-5 → Sun(0)..Mars(4)
+    } else {
+        if (fingers > 4) return -1;
+        return fingers + 4; // Left 1-4 → Jupiter(5)..Neptune(8)
+    }
+}
+
+// Threshold for switching between "Rotating" and "Holding still to select"
+const PALM_MOVE_THRESH = 0.008;
+const HOLD_FRAMES = 22;
+const FIST_RESET_FRAMES = 40;
+const ROT_SENS_Y = 7;
+const ROT_SENS_X = 4.5;
+
+let prevPalmPos = null;
+let lastPinchDist = null;
+let prevPanPos = null;
+let smoothedPanPos = null;
+const panOffset = new THREE.Vector3();
+const panTarget = new THREE.Vector3();
+const focusPanOffset = new THREE.Vector3();
+const focusPanTarget = new THREE.Vector3();
+let fingerBuf = -1;
+let fingerHoldN = 0;
+let rotVelX = 0, rotVelY = 0;
+let focusRotVelX = 0, focusRotVelY = 0;
+let handRotating = false;
+
+// ============================================================
+// 11. MEDIAPIPE CALLBACK
+// ============================================================
+const videoElement = document.getElementsByClassName('input_video')[0];
+const canvasElement = document.getElementsByClassName('output_canvas')[0];
+const canvasCtx = canvasElement.getContext('2d');
+
+function onResults(results) {
+    canvasCtx.save();
+    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+    canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+    if (results.multiHandLandmarks?.length > 0) {
+        for (const lm of results.multiHandLandmarks) {
+            drawConnectors(canvasCtx, lm, HAND_CONNECTIONS, { color: '#00FF88', lineWidth: 2 });
+            drawLandmarks(canvasCtx, lm, { color: '#FF4444', lineWidth: 1 });
+        }
+        if (!solarSystemLoaded) { canvasCtx.restore(); return; }
+
+        let leftHandLm = null;
+        let rightHandLm = null;
+        results.multiHandLandmarks.forEach((lm, index) => {
+            if (isRightHand(results.multiHandedness[index])) rightHandLm = lm;
+            else leftHandLm = lm;
+        });
+        if (results.multiHandLandmarks.length === 2 && (!leftHandLm || !rightHandLm)) {
+            // Fallback if MediaPipe hallucinates both hands as Left/Right
+            leftHandLm = results.multiHandLandmarks[0];
+            rightHandLm = results.multiHandLandmarks[1];
+        }
+
+        const isLeftFist = leftHandLm && countFingersAll(leftHandLm) === 0;
+
+        // ══════════════════════════════════════════
+        // MODE A: TWO HANDS — Left Fist modifier
+        // ══════════════════════════════════════════
+        if (leftHandLm && rightHandLm && isLeftFist) {
+            fingerBuf = -1; fingerHoldN = 0; setProgressHUD(0);
+
+            const rightFingers = countFingersAll(rightHandLm);
+
+            if (rightFingers === 0) {
+                // PAN MODE: 2 Fists
+                lastPinchDist = null;
+                const pPosRaw = { x: rightHandLm[9].x, y: rightHandLm[9].y };
+
+                if (!prevPanPos) {
+                    prevPanPos = { ...pPosRaw };
+                    smoothedPanPos = { ...pPosRaw };
+                }
+
+                // Smoothing on raw hand coordinates — higher factor = faster response, lower = smoother
+                smoothedPanPos.x = THREE.MathUtils.lerp(smoothedPanPos.x, pPosRaw.x, 0.35);
+                smoothedPanPos.y = THREE.MathUtils.lerp(smoothedPanPos.y, pPosRaw.y, 0.35);
+
+                const dx = smoothedPanPos.x - prevPanPos.x;
+                const dy = smoothedPanPos.y - prevPanPos.y;
+
+                // Apply directly without deadzone for the absolute smoothest glide
+                if (dx !== 0 || dy !== 0) {
+                    if (inPlanetFocus) {
+                        const camUp = new THREE.Vector3(0, 1, 0).applyQuaternion(focusCam.quaternion).normalize();
+                        const camRight = new THREE.Vector3(1, 0, 0).applyQuaternion(focusCam.quaternion).normalize();
+                        // panSpeed is relative to distance
+                        const panSpeed = focusCamDist * 1.5;
+                        // Invert dx and dy because we are moving the model directly, not the camera
+                        focusPanTarget.add(camRight.multiplyScalar(-dx * panSpeed));
+                        focusPanTarget.add(camUp.multiplyScalar(-dy * panSpeed));
+                    } else {
+                        const camUp = new THREE.Vector3(0, 1, 0).applyQuaternion(overviewCam.quaternion).normalize();
+                        const camRight = new THREE.Vector3(1, 0, 0).applyQuaternion(overviewCam.quaternion).normalize();
+                        // panSpeed is relative to base zoom, NOT current zoom, so panTarget becomes a normalized screen offset
+                        const panSpeed = overviewBasePos.z * 2.2;
+                        // Inverted dx to match hand physical direction
+                        panTarget.add(camRight.multiplyScalar(dx * panSpeed));
+                        panTarget.add(camUp.multiplyScalar(dy * panSpeed));
+                    }
+                }
+
+                prevPanPos = { ...smoothedPanPos };
+                setGestureHUD('DI CHUYỂN (2 NẮM TAY)');
+            } else if (rightFingers > 0) {
+                // ZOOM MODE: Left Fist + Right Pinch
+                prevPanPos = null;
+                const tipIndex = rightHandLm[8];
+                const tipThumb = rightHandLm[4];
+                const pinchDist = Math.hypot(tipIndex.x - tipThumb.x, tipIndex.y - tipThumb.y);
+
+                if (lastPinchDist !== null) {
+                    const rawDelta = pinchDist - lastPinchDist;
+                    // Lower deadzone threshold so zoom responds to tiny finger movements, reducing "stiffness"
+                    const delta = Math.abs(rawDelta) > 0.001 ? rawDelta * 0.5 : 0;
+                    if (inPlanetFocus) {
+                        targetFocusZoomFactor = THREE.MathUtils.clamp(targetFocusZoomFactor * (1 - delta * 12), 0.3, 5.0);
+                    } else {
+                        targetOverviewZoomFactor = THREE.MathUtils.clamp(targetOverviewZoomFactor * (1 - delta * 15), 0.001, 100);
+                    }
+                }
+                lastPinchDist = pinchDist;
+                if (inPlanetFocus) {
+                    setGestureHUD(`ZOOM ${(targetFocusZoomFactor * 100).toFixed(0)}%`);
+                } else {
+                    setGestureHUD(`ZOOM x${(1 / targetOverviewZoomFactor).toFixed(1)}`);
+                }
+            } else {
+                lastPinchDist = null; prevPanPos = null;
+            }
+        }
+        // ══════════════════════════════════════════
+        // MODE B: EXACTLY ONE HAND
+        // ══════════════════════════════════════════
+        else if (results.multiHandLandmarks.length === 1) {
+            lastPinchDist = null; prevPanPos = null; smoothedPanPos = null;
+            const lm = results.multiHandLandmarks[0];
+            const pPos = { x: lm[9].x, y: lm[9].y };
+            let velocity = prevPalmPos ? Math.hypot(pPos.x - prevPalmPos.x, pPos.y - prevPalmPos.y) : 0;
+            const isRight = isRightHand(results.multiHandedness[0]);
+
+            if (velocity > PALM_MOVE_THRESH) {
+                // ROTATE - strictly Right Hand only
+                fingerBuf = -1; fingerHoldN = 0; setProgressHUD(0);
+                if (isRight) {
+                    if (prevPalmPos) {
+                        const dx = pPos.x - prevPalmPos.x;
+                        const dy = pPos.y - prevPalmPos.y;
+                        if (inPlanetFocus) {
+                            // Inverted dx so model rotates matching hand direction
+                            focusRotVelY = -dx * ROT_SENS_Y * 30;
+                            focusRotVelX = dy * ROT_SENS_X * 30;
+                        } else {
+                            rotVelY = -dx * ROT_SENS_Y * 30;
+                            rotVelX = dy * ROT_SENS_X * 30;
+                        }
+                        handRotating = true;
+                    }
+                    setGestureHUD('ĐANG XOAY...');
+                } else {
+                    setGestureHUD(''); // Left hand moving, do nothing
+                }
+            } else {
+                // STATIONARY — finger hold for planet selection or fist for reset
+                const rawFingers = countFingersAll(lm);
+                const fingers = getStableFingerCount(rawFingers);
+                const isRight = isRightHand(results.multiHandedness[0]);
+
+                if (fingers === 0) {
+                    // FIST — reset/exit
+                    if (fingerBuf === 0) {
+                        fingerHoldN++;
+                        const pct = fingerHoldN / FIST_RESET_FRAMES;
+                        setProgressHUD(pct);
+                        if (inPlanetFocus) {
+                            setGestureHUD(`GIỮ ĐỂ QUAY VỀ... ${Math.round(pct * 100)}%`);
+                            if (fingerHoldN >= FIST_RESET_FRAMES) {
+                                exitPlanetFocus();
+                                fingerBuf = -1; fingerHoldN = 0; setProgressHUD(0);
+                            }
+                        } else {
+                            setGestureHUD(`GIỮ ĐỂ RESET... ${Math.round(pct * 100)}%`);
+                            if (fingerHoldN >= FIST_RESET_FRAMES) {
+                                // Reset overview
+                                rotVelX = 0; rotVelY = 0;
+                                panOffset.set(0, 0, 0);
+                                panTarget.set(0, 0, 0);
+                                overviewZoomFactor = 1.0;
+                                targetOverviewZoomFactor = 1.0;
+                                modelGroup.quaternion.identity();
+                                updateHUD();
+                                fingerBuf = -1; fingerHoldN = 0; setProgressHUD(0);
+                            }
+                        }
+                    } else {
+                        fingerBuf = 0; fingerHoldN = 0; setProgressHUD(0);
+                        setGestureHUD(inPlanetFocus ? 'GIỮ NẮM TAY ĐỂ QUAY VỀ' : 'GIỮ NẮM TAY ĐỂ RESET');
+                    }
+                } else {
+                    // FINGERS — select planet
+                    const planetIdx = fingersToPlanetIdx(fingers, isRight);
+                    if (planetIdx >= 0 && planetIdx < 9) {
+                        const pName = PLANET_INFO[planetIdx].nameVi;
+                        setGestureHUD(`TAY ${isRight ? 'PHẢI' : 'TRÁI'} - ${fingers} NGÓN (${pName})`);
+
+                        if (fingers === fingerBuf) {
+                            fingerHoldN++;
+                            setProgressHUD(fingerHoldN / HOLD_FRAMES);
+                            if (fingerHoldN === HOLD_FRAMES) {
+                                if (modelsPreloaded) {
+                                    enterPlanetFocus(planetIdx);
+                                } else {
+                                    setGestureHUD('ĐANG TẢI MODEL...');
+                                }
+                                fingerHoldN = HOLD_FRAMES + 1; // prevent re-trigger
+                            }
+                        } else {
+                            fingerBuf = fingers; fingerHoldN = 0; setProgressHUD(0);
+                        }
+                    } else {
+                        fingerBuf = -1; fingerHoldN = 0; setProgressHUD(0);
+                        setGestureHUD('SẴN SÀNG');
+                    }
+                }
+            }
+            prevPalmPos = { ...pPos };
+        }
+        // ══════════════════════════════════════════
+        // IDLE: No hands or 2 hands not in Mode A
+        // ══════════════════════════════════════════
+        else {
+            lastPinchDist = null; prevPanPos = null; smoothedPanPos = null;
+            fingerBuf = -1; fingerHoldN = 0; setProgressHUD(0);
+            stableFingerCount = -1; stableFingerCandidate = -1; stableFingerStreak = 0;
+            prevPalmPos = null;
+            setGestureHUD('');
+        }
+    } else {
+        prevPalmPos = null; lastPinchDist = null; prevPanPos = null; smoothedPanPos = null;
+        fingerBuf = -1; fingerHoldN = 0; setProgressHUD(0); setGestureHUD('');
+        stableFingerCount = -1; stableFingerCandidate = -1; stableFingerStreak = 0;
+    }
+    canvasCtx.restore();
+}
 
 // ============================================================
 // 12. MEDIAPIPE SETUP
