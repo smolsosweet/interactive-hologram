@@ -188,8 +188,8 @@ let moonOrbitLine = null;
 // ── FOCUS STATE ──
 let inPlanetFocus = false;
 let focusIndex = -1;
-let focusZoomFactor = 1.0;
-let targetFocusZoomFactor = 1.0;
+let focusZoomFactor = 1.17;
+let targetFocusZoomFactor = 1.17;
 let debugTimer = 0;
 
 // Two-layer structure: focusModelGroup (fixed, holds lights) → focusSpinner (rotates, holds model)
@@ -201,17 +201,17 @@ scene.add(focusModelGroup);
 // MATHEMATICALLY PERFECT DEFAULTS: 
 // 0 = perfectly centered. 
 // -0.25 = perfectly centered in the left 50% of the screen (when Info Panel is open).
-let focusPctXClosed = 0;
-let focusPctYClosed = 0;
-let focusPctXOpen = -0.25; 
-let focusPctYOpen = 0;
+let overviewPctX = -0.065104;
+let overviewPctY = 0.028935;
+let focusPctXClosed = -0.094401;
+let focusPctYClosed = 0.115740;
+let focusPctXOpen = -0.289062;
+let focusPctYOpen = 0.127314;
 
 // Current interpolated percentages for rendering
 let currentFocusPctX = focusPctXClosed;
 let currentFocusPctY = focusPctYClosed;
 
-let overviewPctX = 0;
-let overviewPctY = 0;
 
 // Load saved calibration from local storage
 const savedCalib = localStorage.getItem('hologramCalibration');
@@ -259,12 +259,12 @@ window.addEventListener('keydown', (e) => {
     // RESET HOTKEY
     if (e.key === 'r' || e.key === 'R') {
         localStorage.removeItem('hologramCalibration');
-        overviewPctX = 0; overviewPctY = 0; targetOverviewZoomFactor = 1.0; overviewZoomFactor = 1.0;
-        focusPctXClosed = 0; focusPctYClosed = 0; 
-        focusPctXOpen = -0.25; focusPctYOpen = 0; targetFocusZoomFactor = 1.0; focusZoomFactor = 1.0;
+        overviewPctX = -0.065104; overviewPctY = 0.028935; targetOverviewZoomFactor = 1.0; overviewZoomFactor = 1.0;
+        focusPctXClosed = -0.094401; focusPctYClosed = 0.115740; 
+        focusPctXOpen = -0.289062; focusPctYOpen = 0.127314; targetFocusZoomFactor = 1.17; focusZoomFactor = 1.17;
         currentFocusPctX = focusPctXClosed; currentFocusPctY = focusPctYClosed;
         console.log("CALIBRATION RESET!");
-        setGestureHUD("ĐÃ RESET VỀ MẶC ĐỊNH!");
+        setGestureHUD("ĐÃ RESET VỀ MẶC ĐỊNH (THEO HỘP)!");
         return;
     }
 
@@ -505,9 +505,7 @@ function autoFitCamera() {
     // Calculate bounding box of the entire solar system
     const box = new THREE.Box3().setFromObject(modelGroup);
     const size = new THREE.Vector3();
-    const center = new THREE.Vector3();
     box.getSize(size);
-    box.getCenter(center);
 
     // Solar system is on the XZ plane, get max width
     const maxDim = Math.max(size.x, size.z);
@@ -524,13 +522,17 @@ function autoFitCamera() {
 
     // 60 degree elevation angle
     const elevAngle = Math.PI / 3;
-    const camY = fitDist * Math.sin(elevAngle);
-    const camZ = fitDist * Math.cos(elevAngle);
-    const camX = 0; // The Sun is always at 0
+    
+    // The Sun's actual geometric position in the GLTF file is (9, 10.5, 0)
+    const sunPos = new THREE.Vector3(9, 10.5, 0);
+
+    const camY = sunPos.y + fitDist * Math.sin(elevAngle);
+    const camZ = sunPos.z + fitDist * Math.cos(elevAngle);
+    const camX = sunPos.x; // Align camera X with Sun X
 
     // Update base target pos
     overviewBasePos.set(camX, camY, camZ);
-    overviewLook.set(0, 0, 0); // Always look at the Sun
+    overviewLook.copy(sunPos); // Always look exactly at the Sun
 
     console.log(`🎥 Auto-fit: pos=(${camX.toFixed(1)}, ${camY.toFixed(1)}, ${camZ.toFixed(1)}) | scene maxDim=${maxDim.toFixed(1)} | fitDist=${fitDist.toFixed(1)}`);
 }
