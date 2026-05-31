@@ -1183,7 +1183,109 @@ function onResults(results) {
 const hands = new Hands({ locateFile: f => path.join(__dirname, '../node_modules/@mediapipe/hands', f) });
 hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.75, minTrackingConfidence: 0.75 });
 hands.onResults(onResults);
-new Camera(videoElement, { onFrame: async () => await hands.send({ image: videoElement }), width: 640, height: 480 }).start();
+let currentCameraStream = null;
+let cameraLoopFrame = null;
+let startupDeviceId = null; // deviceId của camera laptop (cái dùng lần đầu tiên)
+let deviceChangeTimer = null; // Debounce cho devicechange
+
+async function startSmartCamera() {
+    try {
+        // Hủy vòng lặp cũ NGAY LẬP TỨC
+        if (cameraLoopFrame) { cancelAnimationFrame(cameraLoopFrame); cameraLoopFrame = null; }
+
+        // TẮT ĐÈN CAMERA CŨ TẬN GỐC
+        if (currentCameraStream) {
+            currentCameraStream.getTracks().forEach(track => track.stop());
+            currentCameraStream = null;
+        }
+        if (videoElement.srcObject) {
+            videoElement.srcObject.getTracks().forEach(track => track.stop());
+            videoElement.srcObject = null;
+        }
+
+        // Đợi 1 nhịp để trình duyệt giải phóng camera cũ hoàn toàn
+        await new Promise(r => setTimeout(r, 300));
+
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(d => d.kind === 'videoinput');
+        
+        // LOG TẤT CẢ CAMERA ĐỂ DEBUG
+        console.log("📸 [SCAN] Tìm thấy", videoDevices.length, "camera:");
+        videoDevices.forEach((d, i) => console.log(`   [${i}] id=${d.deviceId.substring(0,12)}... label="${d.label}"`));
+
+        let selectedDeviceId = null;
+
+        if (videoDevices.length === 0) {
+            console.error("❌ Không tìm thấy camera nào!");
+            return;
+        }
+        
+        if (videoDevices.length > 1) {
+            // CÓ NHIỀU CAMERA: Lấy cái KHÁC với camera laptop (cái đã dùng lúc khởi động)
+            if (startupDeviceId) {
+                const externalCam = videoDevices.find(d => d.deviceId !== startupDeviceId);
+                if (externalCam) {
+                    selectedDeviceId = externalCam.deviceId;
+                    console.log("📸 [AUTO-CAMERA] Đã kết nối Camera Rời:", externalCam.label, "| id=" + externalCam.deviceId.substring(0,12));
+                    setGestureHUD("📸 ĐÃ CHUYỂN SANG CAMERA RỜI!");
+                } else {
+                    // Fallback: Lấy cái cuối cùng
+                    selectedDeviceId = videoDevices[videoDevices.length - 1].deviceId;
+                }
+            } else {
+                // Lần đầu khởi động mà đã có 2 camera → lấy cái cuối
+                selectedDeviceId = videoDevices[videoDevices.length - 1].deviceId;
+                startupDeviceId = videoDevices[0].deviceId; // Ghi nhớ cái đầu tiên là laptop
+                console.log("📸 [AUTO-CAMERA] Đã kết nối Camera Rời:", videoDevices[videoDevices.length - 1].label);
+                setGestureHUD("📸 ĐÃ CHUYỂN SANG CAMERA RỜI!");
+            }
+        } else {
+            // CHỈ CÓ 1 CAMERA: Đây chắc chắn là camera laptop
+            selectedDeviceId = videoDevices[0].deviceId;
+            if (!startupDeviceId) startupDeviceId = selectedDeviceId; // Ghi nhớ lần đầu
+            console.log("📸 [AUTO-CAMERA] Dùng Camera Mặc Định:", videoDevices[0].label, "| id=" + videoDevices[0].deviceId.substring(0,12));
+            setGestureHUD("📸 ĐANG DÙNG CAMERA LAPTOP");
+        }
+
+        // YÊU CẦU CHÍNH XÁC camera theo deviceId
+        currentCameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 640, height: 480, deviceId: { exact: selectedDeviceId } }
+        });
+
+        const actualLabel = currentCameraStream.getVideoTracks()[0].label;
+        const actualId = currentCameraStream.getVideoTracks()[0].getSettings().deviceId;
+        console.log("📸 [STREAM] Thực tế đang chạy:", actualLabel, "| id=" + (actualId || '').substring(0,12));
+
+        videoElement.srcObject = currentCameraStream;
+        await videoElement.play();
+
+        let lastVideoTime = -1;
+        const processFrame = async () => {
+            if (videoElement.readyState >= 2 && videoElement.currentTime !== lastVideoTime) {
+                lastVideoTime = videoElement.currentTime;
+                await hands.send({ image: videoElement });
+            }
+            cameraLoopFrame = requestAnimationFrame(processFrame);
+        };
+        processFrame();
+
+    } catch (err) {
+        console.error("❌ Lỗi khởi tạo Camera:", err);
+        setGestureHUD("❌ LỖI CAMERA!");
+    }
+}
+startSmartCamera();
+
+// TỰ ĐỘNG LẮNG NGHE KHI CÓ NGƯỜI CẮM/RÚT CAMERA (HOT-PLUG) — CÓ DEBOUNCE
+navigator.mediaDevices.addEventListener('devicechange', () => {
+    // Debounce: Windows bắn sự kiện này 2-3 lần liên tục khi cắm USB
+    if (deviceChangeTimer) clearTimeout(deviceChangeTimer);
+    deviceChangeTimer = setTimeout(() => {
+        console.log("🔄 Phát hiện cắm/rút USB Camera! Đang quét lại...");
+        setGestureHUD("🔄 ĐANG QUÉT CAMERA MỚI...");
+        startSmartCamera();
+    }, 2000); // Đợi 2 giây cho Windows nhận diện driver hoàn tất
+});
 
 // ============================================================
 // 13. ANIMATION LOOP
