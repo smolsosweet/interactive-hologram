@@ -11,11 +11,8 @@
 name: 🍎 Build macOS (.dmg)
 
 on:
-  # Tự động chạy khi push lên nhánh main
-  push:
-    branches: [ main ]
-
-  # Cho phép bấm nút chạy thủ công trên GitHub
+  # CHỈ chạy khi bạn bấm nút "Run workflow" thủ công trên GitHub
+  # Vào tab Actions → chọn workflow → nút "Run workflow" → Run
   workflow_dispatch:
 
 jobs:
