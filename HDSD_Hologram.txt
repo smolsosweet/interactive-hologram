@@ -8,6 +8,11 @@ I. CHUẨN BỊ
 1. Mở phần mềm (file .exe). Hãy đảm bảo laptop của bạn có Webcam.
 2. Chấp nhận quyền sử dụng Camera (nếu có yêu cầu).
 
+* Tính năng Cắm Nóng Camera (Hot-Plug):
+- Phần mềm ưu tiên sử dụng Camera rời (USB WebCam) để có góc nhìn tốt nhất.
+- Bạn có thể cắm USB Camera vàoỨ BẤT C LÚC NÀO kể cả khi phần mềm đang chạy.
+- Sau khi cắm, vui lòng đợi 2 giây, phần mềm sẽ tự động tắt đèn Camera Laptop và chuyển luồng hình ảnh sang Camera rời mà không cần phải khởi động lại!
+
 ---------------------------------------------------------
 II. THAO TÁC Ở SẢNH (GIAO DIỆN HỆ MẶT TRỜI)
 ---------------------------------------------------------
@@ -42,16 +47,31 @@ II. THAO TÁC Ở SẢNH (GIAO DIỆN HỆ MẶT TRỜI)
 ---------------------------------------------------------
 III. THAO TÁC KHI XEM CẬN CẢNH HÀNH TINH (FOCUS MODE)
 ---------------------------------------------------------
-Khi đã chọn 1 hành tinh, bạn sẽ vào chế độ xem chi tiết.
-Ở chế độ này, bạn sẽ thấy 2 nút chức năng ở dưới cùng màn hình (dùng chuột để click):
-  - Nút ℹ️: Bật/tắt Bảng thông tin chi tiết của hành tinh (nằm ở nửa phải màn hình).
-  - Nút 📷 / 🎥: Bật/tắt hiển thị luồng Camera nhận diện bàn tay.
+
 1. XOAY HÀNH TINH: Vuốt 1 bàn tay phải (giống thao tác ở Sảnh) để xoay tròn và ngắm nhìn các châu lục/địa hình.
 2. PHÓNG TO / THU NHỎ: Tay trái Nắm đấm + Tay phải bóp/mở 2 ngón (giống hệt thao tác ở Sảnh).
-3. LÔI / DI CHUYỂN HÀNH TINH (MỚI):
+3. LÔI / DI CHUYỂN HÀNH TINH:
    - Đưa cả 2 tay lên thành 2 NẮM ĐẤM (0 ngón).
    - Tương tự như ở Sảnh, giữ nguyên tay trái và kéo tay phải để dời hành tinh sang các vị trí khác trên màn hình (Hữu ích khi bạn muốn di chuyển lăng kính). Mở/đóng Tab thông tin sẽ đưa hành tinh tự động trượt về lại tâm.
 
 4. ĐỂ QUAY VỀ SẢNH: 
    - Đưa Bàn Tay Phải lên và NẮM ĐẤM LẠI. 
    - Giữ yên nắm đấm trong vài giây để thoát ra ngoài.
+
+---------------------------------------------------------
+IV. HỆ THỐNG PHÍM TẮT & CÔNG CỤ DÀNH CHO KỸ THUẬT VIÊN
+---------------------------------------------------------
+1. PHÍM TẮT CHUNG:
+   - [H]: Bật/tắt chế độ Hologram (Lật ngược toàn bộ giao diện 180 độ để chiếu vào lăng kính kim tự tháp).
+   - [C]: Bật/tắt màn hình phụ hiển thị luồng Camera nhận diện cử chỉ.
+   - [T]: Bật/tắt nhanh Tab thông tin chi tiết (Chỉ hoạt động khi đang ở trong chế độ Focus 1 hành tinh).
+
+2. CÔNG CỤ KIỂM TRA (TESTING TOOLS):
+   - [Ctrl + T]: Chuyển đổi giữa các độ phân giải màn hình ảo khác nhau (FHD, 2K, 4K, Ultrawide, Laptop cũ...) để kiểm tra xem Hệ Mặt Trời có luôn luôn được canh giữa tự động (Auto-Fit) hay không. Bấm nhiều lần để thử các kích thước khác nhau.
+   - [Ctrl + D]: Bật/tắt cửa sổ F12 DevTools (Dành cho việc xem log Console hệ thống, cực kỳ hữu ích khi app đang chạy Fullscreen).
+
+3. CHẾ ĐỘ CĂN CHỈNH THỦ CÔNG (CALIBRATION MODE):
+Nếu lăng kính vật lý của bạn bị đặt lệch so với màn hình laptop, bạn có thể chỉnh tay bằng các phím sau:
+   - [Bốn phím Mũi Tên]: Di chuyển tâm của Hologram từng chút một theo 4 hướng Trái / Phải / Lên / Xuống.
+   - [Phím S]: LƯU (Save) toàn bộ vị trí đã căn chỉnh vào bộ nhớ hệ thống. Lần sau mở app, hệ thống sẽ tự động áp dụng vị trí này.
+   - [Phím R]: XÓA (Reset) dữ liệu đã lưu, đưa tọa độ về lại vị trí căn giữa chuẩn mực ban đầu.
