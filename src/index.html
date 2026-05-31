@@ -679,7 +679,10 @@
             // C: Bật/tắt Camera
             camBtn.click();
         } 
-        // Hologram key will be added here
+        else if (key === 'h') {
+            // H: Hologram Mode (Lật ngược giao diện)
+            document.body.classList.toggle('hologram-mode');
+        }
     });
     
     document.getElementById('exit-app-btn').addEventListener('click', closeApp);
