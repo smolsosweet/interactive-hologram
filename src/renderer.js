@@ -188,118 +188,99 @@ let moonOrbitLine = null;
 // ── FOCUS STATE ──
 let inPlanetFocus = false;
 let focusIndex = -1;
-let focusZoomFactor = 1.17;
-let targetFocusZoomFactor = 1.17;
+let focusZoomFactor = 1.0;
+let targetFocusZoomFactor = 1.0;
 let debugTimer = 0;
 
 // Two-layer structure: focusModelGroup (fixed, holds lights) → focusSpinner (rotates, holds model)
 const focusModelGroup = new THREE.Group();
 focusModelGroup.visible = false;
 scene.add(focusModelGroup);
+// ── AUTO-CENTERING SYSTEM ──
+// Vị trí hành tinh và hệ mặt trời được TÍNH TOÁN TỰ ĐỘNG dựa trên kích thước màn hình thực tế.
+// Không cần calibrate thủ công. Hoạt động chính xác trên MỌI loại laptop.
+//
+// Fine-tune offset & zoom (chỉ dùng cho hologram box bị đặt lệch vật lý):
+let hologramCalib = {
+    overview: { offsetX: 0.0260, offsetY: -0.0463, zoom: 1.0 },
+    focusClosed: { offsetX: 0, offsetY: 0, zoom: 1.0 },
+    focusOpen: { offsetX: -0.0618, offsetY: 0, zoom: 1.0 }
+};
 
-// Hologram physical center calibration offsets (in percentages of screen width/height to support different resolutions)
-// MATHEMATICALLY PERFECT DEFAULTS: 
-// 0 = perfectly centered. 
-// -0.25 = perfectly centered in the left 50% of the screen (when Info Panel is open).
-let overviewPctX = -0.065104;
-let overviewPctY = 0.028935;
-let focusPctXClosed = -0.094401;
-let focusPctYClosed = 0.115740;
-let focusPctXOpen = -0.289062;
-let focusPctYOpen = 0.127314;
+function getActiveStateKey() {
+    if (inPlanetFocus) {
+        return isInfoPanelVisible ? 'focusOpen' : 'focusClosed';
+    }
+    return 'overview';
+}
 
-// Current interpolated percentages for rendering
-let currentFocusPctX = focusPctXClosed;
-let currentFocusPctY = focusPctYClosed;
+// Current interpolated focus offset for smooth panel open/close animation
+let currentAutoFocusPctX = 0;
+let currentAutoFocusPctY = 0;
+let currentFocusCalibZoom = 1.0;
 
 
-// Load saved calibration from local storage
-const savedCalib = localStorage.getItem('hologramCalibration');
+// Load saved hologram fine-tune from localStorage
+// Key v3: Lưu state-based calibration riêng biệt
+localStorage.removeItem('hologramCalibration');  // Xóa format cũ v1
+localStorage.removeItem('hologramCalibration_v2');  // Xóa format cũ v2
+const savedCalib = localStorage.getItem('hologramCalibration_v3');
 if (savedCalib) {
     try {
         const parsed = JSON.parse(savedCalib);
-        if (parsed.overviewPctX !== undefined) overviewPctX = parsed.overviewPctX;
-        if (parsed.overviewPctY !== undefined) overviewPctY = parsed.overviewPctY;
-        if (parsed.overviewZoomFactor !== undefined) {
-            targetOverviewZoomFactor = parsed.overviewZoomFactor;
-            overviewZoomFactor = parsed.overviewZoomFactor;
-        }
-        if (parsed.focusPctXClosed !== undefined) focusPctXClosed = parsed.focusPctXClosed;
-        if (parsed.focusPctYClosed !== undefined) focusPctYClosed = parsed.focusPctYClosed;
-        if (parsed.focusPctXOpen !== undefined) focusPctXOpen = parsed.focusPctXOpen;
-        if (parsed.focusPctYOpen !== undefined) focusPctYOpen = parsed.focusPctYOpen;
-        if (parsed.focusZoomFactor !== undefined) {
-            targetFocusZoomFactor = parsed.focusZoomFactor;
-            focusZoomFactor = parsed.focusZoomFactor;
-        }
-        currentFocusPctX = focusPctXClosed;
-        currentFocusPctY = focusPctYClosed;
+        if (parsed.overview) hologramCalib.overview = parsed.overview;
+        if (parsed.focusClosed) hologramCalib.focusClosed = parsed.focusClosed;
+        if (parsed.focusOpen) hologramCalib.focusOpen = parsed.focusOpen;
+        console.log(`📐 Loaded hologram states v3`, hologramCalib);
     } catch (e) {
         console.error("Failed to parse calibration", e);
+        localStorage.removeItem('hologramCalibration_v3');
     }
 }
 
-// Calibration via Arrow Keys (updates the active state)
+// Fine-tune via Arrow Keys (Offset) and +/- (Zoom)
 window.addEventListener('keydown', (e) => {
+    const stateKey = getActiveStateKey();
+    const state = hologramCalib[stateKey];
+
     // SAVE HOTKEY
     if (e.key === 's' || e.key === 'S') {
-        const calibrationData = {
-            overviewPctX, overviewPctY,
-            overviewZoomFactor: targetOverviewZoomFactor,
-            focusPctXClosed, focusPctYClosed,
-            focusPctXOpen, focusPctYOpen,
-            focusZoomFactor: targetFocusZoomFactor
-        };
-        localStorage.setItem('hologramCalibration', JSON.stringify(calibrationData));
-        console.log("CALIBRATION SAVED!", calibrationData);
-        setGestureHUD("ĐÃ LƯU CALIBRATION!");
+        localStorage.setItem('hologramCalibration_v3', JSON.stringify(hologramCalib));
+        console.log("CALIBRATION SAVED!", hologramCalib);
+        setGestureHUD(`ĐÃ LƯU VỊ TRÍ (${stateKey.toUpperCase()})`);
         return;
     }
 
     // RESET HOTKEY
     if (e.key === 'r' || e.key === 'R') {
-        localStorage.removeItem('hologramCalibration');
-        overviewPctX = -0.065104; overviewPctY = 0.028935; targetOverviewZoomFactor = 1.0; overviewZoomFactor = 1.0;
-        focusPctXClosed = -0.094401; focusPctYClosed = 0.115740; 
-        focusPctXOpen = -0.289062; focusPctYOpen = 0.127314; targetFocusZoomFactor = 1.17; focusZoomFactor = 1.17;
-        currentFocusPctX = focusPctXClosed; currentFocusPctY = focusPctYClosed;
+        localStorage.removeItem('hologramCalibration_v3');
+        hologramCalib = {
+            overview: { offsetX: 0.0260, offsetY: -0.0463, zoom: 1.0 },
+            focusClosed: { offsetX: 0, offsetY: 0, zoom: 1.0 },
+            focusOpen: { offsetX: -0.0618, offsetY: 0, zoom: 1.0 }
+        };
         console.log("CALIBRATION RESET!");
-        setGestureHUD("ĐÃ RESET VỀ MẶC ĐỊNH (THEO HỘP)!");
+        setGestureHUD("ĐÃ RESET VỀ MẶC ĐỊNH!");
         return;
     }
 
-    const stepX = 5 / window.innerWidth;  // 5 pixels in percentage
+    // Arrow keys: fine-tune offset (5px mỗi lần bấm)
+    const stepX = 5 / window.innerWidth;
     const stepY = 5 / window.innerHeight;
+    const stepZoom = 0.02;
     
-    if (!inPlanetFocus) {
-        // Calibrate Overview mode
-        if (e.key === 'ArrowLeft') overviewPctX -= stepX;
-        if (e.key === 'ArrowRight') overviewPctX += stepX;
-        if (e.key === 'ArrowUp') overviewPctY -= stepY;
-        if (e.key === 'ArrowDown') overviewPctY += stepY;
-        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-            console.log(`[CALIBRATION OVERVIEW] pctX: ${(overviewPctX*100).toFixed(2)}% | pctY: ${(overviewPctY*100).toFixed(2)}%`);
-        }
-        return;
-    }
+    let changed = false;
+    if (e.key === 'ArrowLeft')  { state.offsetX -= stepX; changed = true; }
+    if (e.key === 'ArrowRight') { state.offsetX += stepX; changed = true; }
+    if (e.key === 'ArrowUp')    { state.offsetY -= stepY; changed = true; }
+    if (e.key === 'ArrowDown')  { state.offsetY += stepY; changed = true; }
+    // Phím +/- (hoặc =/_) để zoom lớn/nhỏ
+    if (e.key === '=' || e.key === '+') { state.zoom -= stepZoom; changed = true; } // Camera gần lại = hình to ra
+    if (e.key === '-' || e.key === '_') { state.zoom += stepZoom; changed = true; } // Camera xa ra = hình nhỏ lại
     
-    // Update the state that is currently active
-    if (isInfoPanelVisible) {
-        if (e.key === 'ArrowLeft') focusPctXOpen -= stepX;
-        if (e.key === 'ArrowRight') focusPctXOpen += stepX;
-        if (e.key === 'ArrowUp') focusPctYOpen -= stepY;
-        if (e.key === 'ArrowDown') focusPctYOpen += stepY;
-        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-            console.log(`[CALIBRATION OPEN] pctX: ${(focusPctXOpen*100).toFixed(2)}% | pctY: ${(focusPctYOpen*100).toFixed(2)}%`);
-        }
-    } else {
-        if (e.key === 'ArrowLeft') focusPctXClosed -= stepX;
-        if (e.key === 'ArrowRight') focusPctXClosed += stepX;
-        if (e.key === 'ArrowUp') focusPctYClosed -= stepY;
-        if (e.key === 'ArrowDown') focusPctYClosed += stepY;
-        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-            console.log(`[CALIBRATION CLOSED] pctX: ${(focusPctXClosed*100).toFixed(2)}% | pctY: ${(focusPctYClosed*100).toFixed(2)}%`);
-        }
+    if (changed) {
+        state.zoom = THREE.MathUtils.clamp(state.zoom, 0.3, 3.0);
+        console.log(`[FINE-TUNE ${stateKey.toUpperCase()}] offsetX: ${(state.offsetX*100).toFixed(2)}% | offsetY: ${(state.offsetY*100).toFixed(2)}% | zoom: ${state.zoom.toFixed(2)}`);
     }
 });
 
@@ -632,6 +613,8 @@ function enterPlanetFocus(idx) {
     focusCamDist = baseDist * focusZoomFactor;
     focusCam.position.set(0, 0, focusCamDist);
     focusCam.lookAt(0, 0, 0);
+    focusCam.clearViewOffset();  // Xóa sạch mọi offset cũ từ overview mode
+    focusCam.updateProjectionMatrix();
 
     // Reset pan
     focusPanTarget.set(0, 0, 0);
@@ -662,11 +645,10 @@ function enterPlanetFocus(idx) {
         console.log(`  FocusCam pos:      (${focusCam.position.x.toFixed(2)}, ${focusCam.position.y.toFixed(2)}, ${focusCam.position.z.toFixed(2)})`);
         console.log(`  FocusCamDist:      ${focusCamDist.toFixed(2)}`);
         console.log(`  FocusZoom:         ${focusZoomFactor}`);
+        console.log(`  calib (closed):    (${hologramCalib.focusClosed.offsetX.toFixed(4)}, ${hologramCalib.focusClosed.offsetY.toFixed(4)})`);
+        console.log(`  autoFocusPct:      (${currentAutoFocusPctX.toFixed(4)}, ${currentAutoFocusPctY.toFixed(4)})`);
         const W = threeRenderer.domElement.width, H = threeRenderer.domElement.height;
-        const panelFrac = 0.44;
-        const leftW = Math.round(W * (1 - panelFrac));
-        console.log(`  Canvas:            ${W} x ${H}`);
-        console.log(`  Left viewport:     ${leftW} x ${H} (center at x=${Math.round(leftW / 2)})`);
+        console.log(`  Canvas:            ${W} x ${H} (DPR=${window.devicePixelRatio})`);
         console.log(`══════════════════════════════════\n`);
     }
 }
@@ -1352,9 +1334,10 @@ function animate() {
     focusZoomFactor = THREE.MathUtils.lerp(focusZoomFactor, targetFocusZoomFactor, 0.08);
 
     // Overview camera position
-    const currentOverviewPos = overviewLook.clone().lerp(overviewBasePos, overviewZoomFactor);
+    const overviewTotalZoom = overviewZoomFactor * hologramCalib.overview.zoom;
+    const currentOverviewPos = overviewLook.clone().lerp(overviewBasePos, overviewTotalZoom);
     // Multiply panOffset by zoomFactor to perfectly maintain perspective angle
-    const currentPan = panOffset.clone().multiplyScalar(overviewZoomFactor);
+    const currentPan = panOffset.clone().multiplyScalar(overviewTotalZoom);
     
     // Camera snaps directly to computed position (no extra lerp layer = less lag)
     overviewCam.position.copy(currentOverviewPos.clone().add(currentPan));
@@ -1391,7 +1374,9 @@ function animate() {
 
         // Focus camera — zoom without shifting perspective
         const baseDist = 5.0;
-        focusCamDist = baseDist * focusZoomFactor;
+        const targetFocusCalibZoom = isInfoPanelVisible ? hologramCalib.focusOpen.zoom : hologramCalib.focusClosed.zoom;
+        currentFocusCalibZoom = THREE.MathUtils.lerp(currentFocusCalibZoom, targetFocusCalibZoom, 0.1);
+        focusCamDist = baseDist * focusZoomFactor * currentFocusCalibZoom;
         focusCam.position.set(0, 0, focusCamDist);
         focusCam.lookAt(0, 0, 0);
 
@@ -1413,12 +1398,17 @@ function animate() {
 // 14. RENDER
 // ============================================================
 function renderFrame() {
-    const W = threeRenderer.domElement.width;
-    const H = threeRenderer.domElement.height;
+    // ── CRITICAL: Three.js setViewport/setScissor tự nhân input × DPR ──
+    // → Phải truyền CSS pixels (container size), KHÔNG phải physical pixels (canvas size)
+    // → setViewOffset/aspect dùng tỉ lệ nên dùng unit nào cũng được (dùng CSS cho nhất quán)
+    const W = container.clientWidth;   // CSS pixels
+    const H = container.clientHeight;  // CSS pixels
 
-    // Convert overview offset
-    const overviewOffsetX = overviewPctX * W;
-    const overviewOffsetY = overviewPctY * H;
+
+
+    // ── OVERVIEW: Manual offset only ──
+    const overviewOffsetX = hologramCalib.overview.offsetX * W;
+    const overviewOffsetY = hologramCalib.overview.offsetY * H;
 
     if (transitionProgress < 0.02) {
         // Pure overview
@@ -1432,20 +1422,38 @@ function renderFrame() {
         return;
     }
 
-    // Interpolate percentages smoothly
-    const targetPctX = isInfoPanelVisible ? focusPctXOpen : focusPctXClosed;
-    const targetPctY = isInfoPanelVisible ? focusPctYOpen : focusPctYClosed;
-    currentFocusPctX = THREE.MathUtils.lerp(currentFocusPctX, targetPctX, 0.1);
-    currentFocusPctY = THREE.MathUtils.lerp(currentFocusPctY, targetPctY, 0.1);
+    // ── FOCUS: Auto-calculate offset based on Info Panel DOM width ──
+    let targetFocusPctX = 0;
+    let targetFocusPctY = 0;
 
-    // Convert to pixel offsets based on current screen dimensions
-    const currentFocusOffsetX = currentFocusPctX * W;
-    const currentFocusOffsetY = currentFocusPctY * H;
+    let targetCalibOffsetX = hologramCalib.focusClosed.offsetX;
+    let targetCalibOffsetY = hologramCalib.focusClosed.offsetY;
+
+    if (isInfoPanelVisible) {
+        const panelEl = document.getElementById('planet-panel');
+        if (panelEl) {
+            const panelWidthPx = panelEl.offsetWidth; // CSS pixels
+            targetFocusPctX = -(panelWidthPx / W) * 0.37;
+        }
+        targetCalibOffsetX = hologramCalib.focusOpen.offsetX;
+        targetCalibOffsetY = hologramCalib.focusOpen.offsetY;
+    }
+
+    // Smooth interpolation for both opening/closing animation AND calibration states
+    const targetTotalX = targetFocusPctX + targetCalibOffsetX;
+    const targetTotalY = targetFocusPctY + targetCalibOffsetY;
+
+    currentAutoFocusPctX = THREE.MathUtils.lerp(currentAutoFocusPctX, targetTotalX, 0.1);
+    currentAutoFocusPctY = THREE.MathUtils.lerp(currentAutoFocusPctY, targetTotalY, 0.1);
+
+    // Tổng hợp (đã được lerp mịn)
+    const focusOffsetX = currentAutoFocusPctX * W;
+    const focusOffsetY = currentAutoFocusPctY * H;
 
     if (transitionProgress > 0.98) {
-        // Pure focus: always full screen, position based on interpolated offset
+        // Pure focus
         focusCam.aspect = W / H;
-        focusCam.setViewOffset(W, H, -currentFocusOffsetX, -currentFocusOffsetY, W, H);
+        focusCam.setViewOffset(W, H, -focusOffsetX, -focusOffsetY, W, H);
         focusCam.updateProjectionMatrix();
 
         scene.background = new THREE.Color(0x000000);
@@ -1465,9 +1473,8 @@ function renderFrame() {
     threeRenderer.setViewport(0, 0, W, H);
     threeRenderer.render(scene, overviewCam);
 
-    // Overlay planet view with a wipe effect from left to right based on transitionProgress
+    // Overlay planet view with a wipe effect
     if (transitionProgress > 0.05) {
-        // Wipe width
         const wipeW = Math.round(W * transitionProgress);
         
         threeRenderer.setScissorTest(true);
@@ -1475,14 +1482,14 @@ function renderFrame() {
         threeRenderer.setViewport(0, 0, W, H);
         
         focusCam.aspect = W / H;
-        focusCam.setViewOffset(W, H, -currentFocusOffsetX, -currentFocusOffsetY, W, H);
+        focusCam.setViewOffset(W, H, -focusOffsetX, -focusOffsetY, W, H);
         focusCam.updateProjectionMatrix();
         
         scene.background = new THREE.Color(0x000000);
         threeRenderer.render(scene, focusCam);
 
         threeRenderer.setScissorTest(false);
-        scene.background = new THREE.Color(0x000008); // restore
+        scene.background = new THREE.Color(0x000008);
     }
 }
 
