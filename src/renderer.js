@@ -219,6 +219,10 @@ let currentAutoFocusPctX = 0;
 let currentAutoFocusPctY = 0;
 let currentFocusCalibZoom = 1.0;
 
+// Idle Mode / Screensaver
+let lastInteractionTime = Date.now();
+const IDLE_TIMEOUT_MS = 30000; // 30 giây không có tay sẽ tự động reset
+
 
 // Load saved hologram fine-tune from localStorage
 // Key v3: Lưu state-based calibration riêng biệt
@@ -950,6 +954,9 @@ function onResults(results) {
     canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
     if (results.multiHandLandmarks?.length > 0) {
+        // Cập nhật thời gian tương tác (reset idle timer)
+        lastInteractionTime = Date.now();
+
         for (const lm of results.multiHandLandmarks) {
             drawConnectors(canvasCtx, lm, HAND_CONNECTIONS, { color: '#00FF88', lineWidth: 2 });
             drawLandmarks(canvasCtx, lm, { color: '#FF4444', lineWidth: 1 });
@@ -1327,6 +1334,20 @@ function animate() {
         const qY = new THREE.Quaternion().setFromAxisAngle(camUp, rotVelY * delta);
         const qX = new THREE.Quaternion().setFromAxisAngle(camRight, rotVelX * delta);
         modelGroup.quaternion.premultiply(qX).premultiply(qY);
+    }
+
+    // ── IDLE MODE (SCREENSAVER) ──
+    if (Date.now() - lastInteractionTime > IDLE_TIMEOUT_MS) {
+        if (inPlanetFocus) {
+            // Đang kẹt ở một hành tinh -> tự động thoát ra sảnh chính
+            exitPlanetFocus();
+        } else {
+            // Đã ở sảnh chính -> tự động xoay hệ mặt trời vòng tròn cực mượt (Demo mode)
+            // Tốc độ 0.1 rad/s (khoảng 1 phút 1 vòng)
+            const camUp = new THREE.Vector3(0, 1, 0).applyQuaternion(overviewCam.quaternion).normalize();
+            const idleQY = new THREE.Quaternion().setFromAxisAngle(camUp, 0.1 * delta);
+            modelGroup.quaternion.premultiply(idleQY);
+        }
     }
 
     // Smooth Zoom Lerping - reduced lerp factor for softer, less stiff feel
