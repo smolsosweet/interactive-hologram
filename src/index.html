@@ -538,6 +538,37 @@
             color: rgba(100,200,255,0.5);
             letter-spacing: 0.06em;
         }
+
+        /* ---- Idle Attract Mode ---- */
+        #idle-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 15; /* Above canvas, below HUD */
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 12%;
+            background: radial-gradient(circle at center, transparent 40%, rgba(0,2,10,0.6) 100%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease;
+        }
+        #idle-overlay.active {
+            opacity: 1;
+        }
+        .idle-text {
+            font-size: 1.8rem;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.9);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(100, 200, 255, 0.6);
+            animation: pulseIdle 2.5s ease-in-out infinite;
+        }
+        @keyframes pulseIdle {
+            0%, 100% { opacity: 0.4; transform: scale(0.98); }
+            50% { opacity: 1; transform: scale(1.02); text-shadow: 0 0 30px rgba(100, 200, 255, 0.9); }
+        }
     </style>
 
     <!-- MediaPipe (local from node_modules) -->
@@ -551,6 +582,11 @@
 
     <!-- THREE.js canvas -->
     <div id="canvas-container"></div>
+
+    <!-- Idle Attract Mode Overlay -->
+    <div id="idle-overlay">
+        <div class="idle-text">Đưa tay lên để bắt đầu khám phá</div>
+    </div>
 
     <!-- ========================================================
          PLANET INFO PANEL (right side, shows on planet focus)

@@ -10,6 +10,7 @@ const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000008);
 
+
 // ── Overview camera ──
 const overviewCam = new THREE.PerspectiveCamera(
     60, container.clientWidth / container.clientHeight, 0.1, 8000
@@ -956,6 +957,10 @@ function onResults(results) {
     if (results.multiHandLandmarks?.length > 0) {
         // Cập nhật thời gian tương tác (reset idle timer)
         lastInteractionTime = Date.now();
+        const overlay = document.getElementById('idle-overlay');
+        if (overlay && overlay.classList.contains('active')) {
+            overlay.classList.remove('active');
+        }
 
         for (const lm of results.multiHandLandmarks) {
             drawConnectors(canvasCtx, lm, HAND_CONNECTIONS, { color: '#00FF88', lineWidth: 2 });
@@ -1021,6 +1026,7 @@ function onResults(results) {
                         panTarget.add(camRight.multiplyScalar(dx * panSpeed));
                         panTarget.add(camUp.multiplyScalar(dy * panSpeed));
                     }
+                } else {
                 }
 
                 prevPanPos = { ...smoothedPanPos };
@@ -1041,6 +1047,7 @@ function onResults(results) {
                     } else {
                         targetOverviewZoomFactor = THREE.MathUtils.clamp(targetOverviewZoomFactor * (1 - delta * 15), 0.001, 100);
                     }
+                } else {
                 }
                 lastPinchDist = pinchDist;
                 if (inPlanetFocus) {
@@ -1049,6 +1056,7 @@ function onResults(results) {
                     setGestureHUD(`ZOOM x${(1 / targetOverviewZoomFactor).toFixed(1)}`);
                 }
             } else {
+
                 lastPinchDist = null; prevPanPos = null;
             }
         }
@@ -1056,6 +1064,7 @@ function onResults(results) {
         // MODE B: EXACTLY ONE HAND
         // ══════════════════════════════════════════
         else if (results.multiHandLandmarks.length === 1) {
+
             lastPinchDist = null; prevPanPos = null; smoothedPanPos = null;
             const lm = results.multiHandLandmarks[0];
             const pPos = { x: lm[9].x, y: lm[9].y };
@@ -1077,13 +1086,16 @@ function onResults(results) {
                             rotVelY = -dx * ROT_SENS_Y * 30;
                             rotVelX = dy * ROT_SENS_X * 30;
                         }
+
                         handRotating = true;
                     }
                     setGestureHUD('ĐANG XOAY...');
                 } else {
+
                     setGestureHUD(''); // Left hand moving, do nothing
                 }
             } else {
+
                 // STATIONARY — finger hold for planet selection or fist for reset
                 const rawFingers = countFingersAll(lm);
                 const fingers = getStableFingerCount(rawFingers);
@@ -1338,6 +1350,11 @@ function animate() {
 
     // ── IDLE MODE (SCREENSAVER) ──
     if (Date.now() - lastInteractionTime > IDLE_TIMEOUT_MS) {
+        const overlay = document.getElementById('idle-overlay');
+        if (overlay && !overlay.classList.contains('active')) {
+            overlay.classList.add('active');
+        }
+
         if (inPlanetFocus) {
             // Đang kẹt ở một hành tinh -> tự động thoát ra sảnh chính
             exitPlanetFocus();
