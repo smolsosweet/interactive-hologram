@@ -1,5 +1,5 @@
 {
-  "name": "holo_manager_app",
+  "name": "delphora",
   "version": "1.0.0",
   "description": "Interactive 3D Solar System Hologram with hand gesture control",
   "author": "smolsosweet",
@@ -10,15 +10,18 @@
     "build:mac": "electron-builder --mac --publish never"
   },
   "build": {
-    "appId": "com.hologram.solarsystem",
-    "productName": "Solar System Hologram",
+    "appId": "com.delphora.solarsystem",
+    "productName": "Delphora",
     "directories": {
       "output": "dist"
     },
+    "icon": "build/icon.png",
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.png"
     },
     "mac": {
+      "icon": "build/icon.png",
       "target": [
         {
           "target": "dmg",

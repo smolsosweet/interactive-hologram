@@ -7,6 +7,7 @@ function createWindow() {
     height: 800,
     fullscreen: true, // Tự động bật chế độ toàn màn hình (như F11)
     autoHideMenuBar: true, // Ẩn thanh menu ngang
+    icon: path.join(__dirname, 'build/icon.png'),
     webPreferences: {
       nodeIntegration: true, // Cho phép dùng thư viện của Node
       contextIsolation: false, // Tắt cách ly để JS trong HTML gọi được Node
@@ -47,6 +48,11 @@ function createWindow() {
   // Ctrl+D để bật DevTools
   globalShortcut.register('CommandOrControl+D', () => {
       win.webContents.toggleDevTools();
+  });
+
+  // F11 để bật/tắt toàn màn hình
+  globalShortcut.register('F11', () => {
+      win.setFullScreen(!win.isFullScreen());
   });
 }
 
