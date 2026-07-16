@@ -1,0 +1,30 @@
+name: 🚀 Release OTA (Windows)
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # Chỉ chạy khi bạn đẩy 1 tag như v1.0.0, v1.0.1,...
+
+jobs:
+  release-win:
+    runs-on: windows-latest
+
+    permissions:
+      contents: write # Cho phép GitHub Actions đăng Release lên repo của bạn
+
+    steps:
+      - name: 📥 Checkout source code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🚀 Build and Publish
+        run: npm run release:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,5 +1,6 @@
-const { app, BrowserWindow, globalShortcut } = require('electron')
+const { app, BrowserWindow, globalShortcut, dialog } = require('electron')
 const path = require('path')
+const { autoUpdater } = require('electron-updater')
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -53,6 +54,26 @@ function createWindow() {
   // F11 để bật/tắt toàn màn hình
   globalShortcut.register('F11', () => {
       win.setFullScreen(!win.isFullScreen());
+  });
+
+  // ── AUTO-UPDATER LOGIC ──
+  // Check updates when app is ready
+  autoUpdater.checkForUpdatesAndNotify();
+
+  autoUpdater.on('update-available', () => {
+      console.log('Update available.');
+  });
+  
+  autoUpdater.on('update-downloaded', () => {
+      console.log('Update downloaded.');
+      dialog.showMessageBox({
+          type: 'info',
+          title: 'Cập nhật hoàn tất',
+          message: 'Một phiên bản mới của Delphora đã được tải về. Ứng dụng sẽ tự động khởi động lại để cài đặt.',
+          buttons: ['Khởi động lại ngay']
+      }).then(() => {
+          setImmediate(() => autoUpdater.quitAndInstall());
+      });
   });
 }
 
