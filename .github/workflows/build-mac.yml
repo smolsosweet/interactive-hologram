@@ -1,55 +1,35 @@
-# ============================================================
-# 🍎 BUILD macOS — GitHub Actions Workflow
-# ============================================================
-# File này ra lệnh cho SERVER ẢO CỦA GITHUB (chạy macOS thật!)
-# tự động clone repo, cài dependencies, và build ra file .dmg
-#
-# Kích hoạt: Mỗi khi bạn push code lên nhánh "main"
-#            HOẶC bấm nút "Run workflow" thủ công trên GitHub
-# ============================================================
-
-name: 🍎 Build macOS (.dmg)
+name: 🍎 Release OTA (macOS)
 
 on:
-  # CHỈ chạy khi bạn bấm nút "Run workflow" thủ công trên GitHub
-  # Vào tab Actions → chọn workflow → nút "Run workflow" → Run
+  push:
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
 
 jobs:
-  build-mac:
-    # 👉 ĐÂY LÀ DÒNG QUAN TRỌNG NHẤT:
-    # Yêu cầu GitHub cấp cho ta một con máy Mac ảo (miễn phí!)
+  release-mac:
     runs-on: macos-latest
 
+    permissions:
+      contents: write
+
     steps:
-      # Bước 1: Clone repo về máy Mac ảo
       - name: 📥 Checkout source code
         uses: actions/checkout@v4
 
-      # Bước 2: Cài Node.js trên máy Mac ảo
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # Bước 3: Cài tất cả dependencies (npm install)
       - name: 🗑️ Remove .npmrc (Fix mirror 404 issue)
         run: rm -f .npmrc
         
       - name: 📦 Install dependencies
         run: npm ci
 
-      # Bước 4: Build ra file .dmg
-      - name: 🔨 Build macOS .dmg
-        run: npm run build:mac
+      - name: 🚀 Build and Publish macOS .dmg
+        run: npm run release:mac
         env:
-          # Bỏ qua code signing (vì ta không có Apple Developer Account)
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
-
-      # Bước 5: Upload file .dmg lên GitHub để bạn tải về
-      - name: 📤 Upload .dmg artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Solar-System-Hologram-macOS
-          path: dist/*.dmg
-          retention-days: 30

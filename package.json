@@ -8,7 +8,8 @@
     "start": "electron .",
     "build": "electron-builder --win --publish never",
     "build:mac": "electron-builder --mac --publish never",
-    "release:win": "electron-builder --win --publish always"
+    "release:win": "electron-builder --win --publish always",
+    "release:mac": "electron-builder --mac --publish always"
   },
   "build": {
     "appId": "com.delphora.solarsystem",
