@@ -1,6 +1,6 @@
 {
   "name": "delphora",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Interactive 3D Solar System Hologram with hand gesture control",
   "author": "smolsosweet",
   "main": "main.js",
