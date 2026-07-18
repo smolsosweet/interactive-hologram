@@ -8,7 +8,7 @@ const path = require('path');
 // ============================================================
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000008);
+scene.background = new THREE.Color(0x000000);
 
 
 // ── Overview camera ──
@@ -1453,7 +1453,7 @@ function renderFrame() {
         overviewCam.aspect = W / H;
         overviewCam.setViewOffset(W, H, -overviewOffsetX, -overviewOffsetY, W, H);
         overviewCam.updateProjectionMatrix();
-        scene.background = new THREE.Color(0x000008);
+        scene.background = new THREE.Color(0x000000);
         threeRenderer.setScissorTest(false);
         threeRenderer.setViewport(0, 0, W, H);
         threeRenderer.render(scene, overviewCam);
@@ -1506,7 +1506,7 @@ function renderFrame() {
     overviewCam.aspect = W / H;
     overviewCam.setViewOffset(W, H, -overviewOffsetX, -overviewOffsetY, W, H);
     overviewCam.updateProjectionMatrix();
-    scene.background = new THREE.Color(0x000008);
+    scene.background = new THREE.Color(0x000000);
     threeRenderer.setScissorTest(false);
     threeRenderer.setViewport(0, 0, W, H);
     threeRenderer.render(scene, overviewCam);
@@ -1527,7 +1527,7 @@ function renderFrame() {
         threeRenderer.render(scene, focusCam);
 
         threeRenderer.setScissorTest(false);
-        scene.background = new THREE.Color(0x000008);
+        scene.background = new THREE.Color(0x000000);
     }
 }
 
