@@ -1598,15 +1598,12 @@ if (APP_MODE === "hologram") {
             inPlanetFocus = data.inPlanetFocus;
             focusIndex = data.focusIndex;
             
-            // Tự động click các nút UI tương ứng để đồng bộ DOM
             if (inPlanetFocus) {
-                // Focus
-                const planets = document.querySelectorAll('.planet-btn');
-                if (planets[focusIndex]) planets[focusIndex].click();
+                setFocusModel(focusIndex);
+                showPlanetPanel(focusIndex);
             } else {
-                // Back to Solar System
-                const backBtn = document.getElementById('back-btn');
-                if (backBtn) backBtn.click();
+                clearFocusModel();
+                hidePlanetPanel();
             }
         }
     });
