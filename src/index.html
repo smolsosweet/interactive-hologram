@@ -569,6 +569,34 @@
         body.hologram-mode .output_canvas {
             display: none !important;
         }
+
+        /* -- CONTROL-SCREEN CSS -- */
+        body.control-mode #canvas-container {
+            display: none !important;
+        }
+
+        body.control-mode .output_canvas {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 1 !important; /* Ð?y xu?ng du?i cùng nhung trên n?n */
+            border: none !important;
+            border-radius: 0 !important;
+            background: #000 !important;
+            object-fit: cover !important;
+        }
+
+        /* Ð?y các UI khác n?i lên trên camera */
+        body.control-mode #hud-logos,
+        body.control-mode #hud-gesture-wrap,
+        body.control-mode #planet-panel,
+        body.control-mode #idle-overlay {
+            z-index: 10 !important;
+        }
 </style>
 
     <!-- MediaPipe (local from node_modules) -->
