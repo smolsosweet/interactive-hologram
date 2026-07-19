@@ -9,6 +9,16 @@ const APP_MODE = urlParams.get('mode') || 'control';
 
 if (APP_MODE === 'hologram') {
     document.body.classList.add('hologram-mode');
+} else if (APP_MODE === 'control') {
+    document.body.classList.add('control-mode');
+    
+    // Automatically show camera in control mode
+    setTimeout(() => {
+        const camBtn = document.getElementById('cam-toggle-btn');
+        if (camBtn && (!document.querySelector('canvas.output_canvas').style.display || document.querySelector('canvas.output_canvas').style.display === 'none')) {
+            camBtn.click();
+        }
+    }, 1000);
 }
 
 // ============================================================
