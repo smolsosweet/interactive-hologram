@@ -1451,8 +1451,8 @@ function animate() {
 
     if (APP_MODE === "control") {
         ipcRenderer.send("sync-action", {
-            overviewRot: [modelGroup.rotation.x, modelGroup.rotation.y, modelGroup.rotation.z],
-            focusRot: [focusSpinner.rotation.x, focusSpinner.rotation.y, focusSpinner.rotation.z],
+            overviewQuat: [modelGroup.quaternion.x, modelGroup.quaternion.y, modelGroup.quaternion.z, modelGroup.quaternion.w],
+            focusQuat: [focusSpinner.quaternion.x, focusSpinner.quaternion.y, focusSpinner.quaternion.z, focusSpinner.quaternion.w],
             inPlanetFocus: inPlanetFocus,
             focusIndex: focusIndex,
             transitionTarget: transitionTarget,
@@ -1589,8 +1589,8 @@ window.addEventListener('resize', () => {
 
 if (APP_MODE === "hologram") {
     ipcRenderer.on("sync-action", (e, data) => {
-        if (data.overviewRot && !isNaN(data.overviewRot[0])) modelGroup.rotation.set(data.overviewRot[0], data.overviewRot[1], data.overviewRot[2]);
-        if (data.focusRot && !isNaN(data.focusRot[0])) focusSpinner.rotation.set(data.focusRot[0], data.focusRot[1], data.focusRot[2]);
+        if (data.overviewQuat && !isNaN(data.overviewQuat[0])) modelGroup.quaternion.set(data.overviewQuat[0], data.overviewQuat[1], data.overviewQuat[2], data.overviewQuat[3]);
+        if (data.focusQuat && !isNaN(data.focusQuat[0])) focusSpinner.quaternion.set(data.focusQuat[0], data.focusQuat[1], data.focusQuat[2], data.focusQuat[3]);
         if (typeof data.transitionTarget === "number" && !isNaN(data.transitionTarget)) transitionTarget = data.transitionTarget;
         if (typeof data.transitionProgress === "number" && !isNaN(data.transitionProgress)) transitionProgress = data.transitionProgress;
         lastInteractionTime = data.lastInteractionTime;
