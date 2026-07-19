@@ -1448,6 +1448,21 @@ function animate() {
 
     // ── Render ──
     renderFrame();
+
+    if (APP_MODE === "control") {
+        ipcRenderer.send("sync-action", {
+            overviewRot: [modelGroup.rotation.x, modelGroup.rotation.y, modelGroup.rotation.z],
+            focusRot: [focusSpinner.rotation.x, focusSpinner.rotation.y, focusSpinner.rotation.z],
+            inPlanetFocus: inPlanetFocus,
+            focusIndex: focusIndex,
+            transitionTarget: transitionTarget,
+            transitionProgress: transitionProgress,
+            lastInteractionTime: lastInteractionTime,
+            isIdleMode: false,
+            targetRotationY: typeof targetRotationY !== "undefined" ? targetRotationY : modelGroup.rotation.y,
+            targetRotationX: typeof targetRotationX !== "undefined" ? targetRotationX : modelGroup.rotation.x
+        });
+    }
 }
 
 // ============================================================
@@ -1567,3 +1582,32 @@ window.addEventListener('resize', () => {
 
     if (solarSystemLoaded) autoFitCamera();
 });
+
+if (APP_MODE === "hologram") {
+    ipcRenderer.on("sync-action", (e, data) => {
+        modelGroup.rotation.set(data.overviewRot[0], data.overviewRot[1], data.overviewRot[2]);
+        focusSpinner.rotation.set(data.focusRot[0], data.focusRot[1], data.focusRot[2]);
+        transitionTarget = data.transitionTarget;
+        transitionProgress = data.transitionProgress;
+        lastInteractionTime = data.lastInteractionTime;
+        
+        if (typeof targetRotationY !== "undefined") targetRotationY = data.targetRotationY;
+        if (typeof targetRotationX !== "undefined") targetRotationX = data.targetRotationX;
+        
+        if (data.inPlanetFocus !== inPlanetFocus || data.focusIndex !== focusIndex) {
+            inPlanetFocus = data.inPlanetFocus;
+            focusIndex = data.focusIndex;
+            
+            // Tự động click các nút UI tương ứng để đồng bộ DOM
+            if (inPlanetFocus) {
+                // Focus
+                const planets = document.querySelectorAll('.planet-btn');
+                if (planets[focusIndex]) planets[focusIndex].click();
+            } else {
+                // Back to Solar System
+                const backBtn = document.getElementById('back-btn');
+                if (backBtn) backBtn.click();
+            }
+        }
+    });
+}
