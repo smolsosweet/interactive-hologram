@@ -1589,19 +1589,19 @@ window.addEventListener('resize', () => {
 
 if (APP_MODE === "hologram") {
     ipcRenderer.on("sync-action", (e, data) => {
-        modelGroup.rotation.set(data.overviewRot[0], data.overviewRot[1], data.overviewRot[2]);
-        focusSpinner.rotation.set(data.focusRot[0], data.focusRot[1], data.focusRot[2]);
-        transitionTarget = data.transitionTarget;
-        transitionProgress = data.transitionProgress;
+        if (data.overviewRot && !isNaN(data.overviewRot[0])) modelGroup.rotation.set(data.overviewRot[0], data.overviewRot[1], data.overviewRot[2]);
+        if (data.focusRot && !isNaN(data.focusRot[0])) focusSpinner.rotation.set(data.focusRot[0], data.focusRot[1], data.focusRot[2]);
+        if (typeof data.transitionTarget === "number" && !isNaN(data.transitionTarget)) transitionTarget = data.transitionTarget;
+        if (typeof data.transitionProgress === "number" && !isNaN(data.transitionProgress)) transitionProgress = data.transitionProgress;
         lastInteractionTime = data.lastInteractionTime;
         
         if (typeof targetRotationY !== "undefined") targetRotationY = data.targetRotationY;
         if (typeof targetRotationX !== "undefined") targetRotationX = data.targetRotationX;
         
-        if (typeof data.targetOverviewZoomFactor !== "undefined") targetOverviewZoomFactor = data.targetOverviewZoomFactor;
-        if (typeof data.targetFocusZoomFactor !== "undefined") targetFocusZoomFactor = data.targetFocusZoomFactor;
-        if (data.panTarget) panTarget.set(data.panTarget[0], data.panTarget[1], data.panTarget[2]);
-        if (data.focusPanTarget) focusPanTarget.set(data.focusPanTarget[0], data.focusPanTarget[1], data.focusPanTarget[2]);
+        if (typeof data.targetOverviewZoomFactor === "number" && !isNaN(data.targetOverviewZoomFactor)) targetOverviewZoomFactor = data.targetOverviewZoomFactor;
+        if (typeof data.targetFocusZoomFactor === "number" && !isNaN(data.targetFocusZoomFactor)) targetFocusZoomFactor = data.targetFocusZoomFactor;
+        if (data.panTarget && !isNaN(data.panTarget[0])) panTarget.set(data.panTarget[0], data.panTarget[1], data.panTarget[2]);
+        if (data.focusPanTarget && !isNaN(data.focusPanTarget[0])) focusPanTarget.set(data.focusPanTarget[0], data.focusPanTarget[1], data.focusPanTarget[2]);
         
         if (data.inPlanetFocus !== inPlanetFocus || data.focusIndex !== focusIndex) {
             inPlanetFocus = data.inPlanetFocus;
