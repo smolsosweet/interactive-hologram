@@ -1460,7 +1460,11 @@ function animate() {
             lastInteractionTime: lastInteractionTime,
             isIdleMode: false,
             targetRotationY: typeof targetRotationY !== "undefined" ? targetRotationY : modelGroup.rotation.y,
-            targetRotationX: typeof targetRotationX !== "undefined" ? targetRotationX : modelGroup.rotation.x
+            targetRotationX: typeof targetRotationX !== "undefined" ? targetRotationX : modelGroup.rotation.x,
+            targetOverviewZoomFactor: targetOverviewZoomFactor,
+            targetFocusZoomFactor: targetFocusZoomFactor,
+            panTarget: [panTarget.x, panTarget.y, panTarget.z],
+            focusPanTarget: [focusPanTarget.x, focusPanTarget.y, focusPanTarget.z]
         });
     }
 }
@@ -1593,6 +1597,11 @@ if (APP_MODE === "hologram") {
         
         if (typeof targetRotationY !== "undefined") targetRotationY = data.targetRotationY;
         if (typeof targetRotationX !== "undefined") targetRotationX = data.targetRotationX;
+        
+        if (typeof data.targetOverviewZoomFactor !== "undefined") targetOverviewZoomFactor = data.targetOverviewZoomFactor;
+        if (typeof data.targetFocusZoomFactor !== "undefined") targetFocusZoomFactor = data.targetFocusZoomFactor;
+        if (data.panTarget) panTarget.set(data.panTarget[0], data.panTarget[1], data.panTarget[2]);
+        if (data.focusPanTarget) focusPanTarget.set(data.focusPanTarget[0], data.focusPanTarget[1], data.focusPanTarget[2]);
         
         if (data.inPlanetFocus !== inPlanetFocus || data.focusIndex !== focusIndex) {
             inPlanetFocus = data.inPlanetFocus;
