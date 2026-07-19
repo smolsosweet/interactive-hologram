@@ -558,49 +558,50 @@
             50% { opacity: 1; transform: scale(1.02); text-shadow: 0 0 30px rgba(100, 200, 255, 0.9); }
         }
     
-        /* -- DUAL-SCREEN CSS -- */
-        body.hologram-mode #idle-overlay,
-        body.hologram-mode #planet-panel,
-        body.hologram-mode #loading-overlay,
+        /* ‚ïê‚ïê DUAL-SCREEN MODE CSS ‚ïê‚ïê
+           Tab 1 (control): Camera full-screen + logo + gesture
+           Tab 2 (hologram): Planets only + planet info (flipped) */
+
+        /* TAB 2 HOLOGRAM: Hide logo, gesture, buttons, camera, idle */
         body.hologram-mode #hud-logos,
         body.hologram-mode #hud-gesture-wrap,
         body.hologram-mode #btn-container,
+        body.hologram-mode #loading-overlay,
+        body.hologram-mode #idle-overlay,
         body.hologram-mode .input_video,
         body.hologram-mode .output_canvas {
             display: none !important;
         }
 
-        /* -- CONTROL-SCREEN CSS -- */
-        body.control-mode #canvas-container {
+        /* TAB 1 CONTROL: Hide 3D planets, planet info, buttons, idle */
+        body.control-mode #canvas-container,
+        body.control-mode #planet-panel,
+        body.control-mode #btn-container,
+        body.control-mode #idle-overlay {
             display: none !important;
         }
 
+        /* Camera canvas full screen */
         body.control-mode .output_canvas {
-            position: absolute !important;
+            position: fixed !important;
             top: 0 !important;
             left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            z-index: 1 !important; /* –?y xu?ng du?i c˘ng nhung trÍn n?n */
+            z-index: 1 !important;
             border: none !important;
             border-radius: 0 !important;
             background: #000 !important;
             object-fit: cover !important;
+            transform: scaleX(-1) !important;
         }
 
-        /* –?y c·c UI kh·c n?i lÍn trÍn camera */
+        /* Logo and gesture HUD float above camera */
         body.control-mode #hud-logos,
-        body.control-mode #hud-gesture-wrap,
-        body.control-mode #planet-panel,
-        body.control-mode #idle-overlay {
+        body.control-mode #hud-gesture-wrap {
             z-index: 10 !important;
         }
-        body.control-mode #btn-container {
-            display: none !important;
-            z-index: 10 !important;
-        }
+</style>
 </style>
 
     <!-- MediaPipe (local from node_modules) -->
@@ -748,8 +749,8 @@
             camBtn.click();
         } 
         else if (key === 'h') {
-            // H: Hologram Mode (L·∫≠t ng∆∞·ª£c giao di·ªán)
-            document.body.classList.toggle('hologram-mode');
+            // H: Disabled in dual-screen mode (mode is set automatically)
+            // document.body.classList.toggle('hologram-mode');
         }
     });
     
