@@ -425,21 +425,9 @@
         /* ---- Camera feed ---- */
         video.input_video { display: none; }
 
-        canvas.output_canvas {
-            position: absolute;
-            bottom: 20px; right: 20px;
+        .output_canvas {
+            position: absolute; right: 20px; top: 120px;
             width: 320px; height: 240px;
-            border: 1.5px solid rgba(0,255,136,0.45);
-            border-radius: 10px;
-            z-index: 20;
-            background: #000;
-            transform: scaleX(-1);
-            box-shadow: 0 0 20px rgba(0,255,136,0.12);
-            transition: right 0.65s cubic-bezier(0.16,1,0.3,1),
-                        bottom 0.65s cubic-bezier(0.16,1,0.3,1),
-                        width 0.65s cubic-bezier(0.16,1,0.3,1),
-                        height 0.65s cubic-bezier(0.16,1,0.3,1);
-        }
         body.in-focus canvas.output_canvas {
             right: auto;
             left: 20px;
@@ -569,7 +557,19 @@
             0%, 100% { opacity: 0.4; transform: scale(0.98); }
             50% { opacity: 1; transform: scale(1.02); text-shadow: 0 0 30px rgba(100, 200, 255, 0.9); }
         }
-    </style>
+    
+        /* -- DUAL-SCREEN CSS -- */
+        body.hologram-mode #idle-overlay,
+        body.hologram-mode #planet-panel,
+        body.hologram-mode #loading-overlay,
+        body.hologram-mode #hud-logos,
+        body.hologram-mode #hud-gesture-wrap,
+        body.hologram-mode #btn-container,
+        body.hologram-mode .input_video,
+        body.hologram-mode .output_canvas {
+            display: none !important;
+        }
+</style>
 
     <!-- MediaPipe (local from node_modules) -->
     <script src="../node_modules/@mediapipe/camera_utils/camera_utils.js"></script>

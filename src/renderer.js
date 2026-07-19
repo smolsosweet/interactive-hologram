@@ -2,6 +2,14 @@ import * as THREE from 'https://cdn.skypack.dev/three@0.132.2';
 import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/GLTFLoader.js';
 
 const path = require('path');
+const { ipcRenderer } = require('electron');
+
+const urlParams = new URLSearchParams(window.location.search);
+const APP_MODE = urlParams.get('mode') || 'control';
+
+if (APP_MODE === 'hologram') {
+    document.body.classList.add('hologram-mode');
+}
 
 // ============================================================
 // 1. SCENE & RENDERER SETUP
@@ -1275,7 +1283,7 @@ async function startSmartCamera() {
         setGestureHUD("❌ LỖI CAMERA!");
     }
 }
-startSmartCamera();
+if (APP_MODE === "control") startSmartCamera();
 
 // TỰ ĐỘNG LẮNG NGHE KHI CÓ NGƯỜI CẮM/RÚT CAMERA (HOT-PLUG) — CÓ DEBOUNCE
 navigator.mediaDevices.addEventListener('devicechange', () => {
@@ -1284,7 +1292,7 @@ navigator.mediaDevices.addEventListener('devicechange', () => {
     deviceChangeTimer = setTimeout(() => {
         console.log("🔄 Phát hiện cắm/rút USB Camera! Đang quét lại...");
         setGestureHUD("🔄 ĐANG QUÉT CAMERA MỚI...");
-        startSmartCamera();
+        if (APP_MODE === "control") startSmartCamera();
     }, 2000); // Đợi 2 giây cho Windows nhận diện driver hoàn tất
 });
 

@@ -1,71 +1,77 @@
-const { app, BrowserWindow, globalShortcut, dialog } = require('electron')
+const { app, BrowserWindow, globalShortcut, dialog, screen, ipcMain } = require('electron')
 const path = require('path')
 const { autoUpdater } = require('electron-updater')
 
-function createWindow() {
-  const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    fullscreen: true, // Tự động bật chế độ toàn màn hình (như F11)
-    autoHideMenuBar: true, // Ẩn thanh menu ngang
+let winControl = null;
+let winHologram = null;
+
+function createWindows() {
+  const displays = screen.getAllDisplays();
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const externalDisplay = displays.find((display) => {
+    return display.bounds.x !== 0 || display.bounds.y !== 0
+  });
+
+  const commonProps = {
+    autoHideMenuBar: true,
     icon: path.join(__dirname, 'build/icon.png'),
     webPreferences: {
-      nodeIntegration: true, // Cho phép dùng thư viện của Node
-      contextIsolation: false, // Tắt cách ly để JS trong HTML gọi được Node
-      webSecurity: false // TẮT BẢO MẬT WEB CỤC BỘ: Cho phép Three.js đọc file từ ổ C:/ D:/
+      nodeIntegration: true,
+      contextIsolation: false,
+      webSecurity: false
     }
-  })
+  };
+
+  // 1. Control Window (Laptop)
+  winControl = new BrowserWindow({
+    ...commonProps,
+    width: 1000,
+    height: 700,
+    x: primaryDisplay.bounds.x + 50,
+    y: primaryDisplay.bounds.y + 50,
+    title: "Delphora - Control Panel"
+  });
   
-  win.removeMenu() // Xóa hoàn toàn thanh Menu (File, Edit, View,...)
+  winControl.removeMenu();
+  winControl.loadFile('src/index.html', { query: { mode: 'control' } });
 
-  win.loadFile('src/index.html')
-
-  // Mở DevTools để debug (như F12 trên Chrome)
-  // win.webContents.openDevTools()
-
-  // BỘ CÔNG CỤ TEST ĐA MÀN HÌNH
-  const TEST_SIZES = [
-      { w: 1920, h: 1080, name: 'FHD 16:9' },      // phổ biến nhất
-      { w: 1366, h: 768,  name: 'Laptop cũ' },      // laptop giá rẻ
-      { w: 1280, h: 800,  name: 'Macbook 16:10' },  // macbook
-      { w: 2560, h: 1440, name: '2K 16:9' },        // màn gaming
-      { w: 3840, h: 2160, name: '4K' },             // màn 4K
-      { w: 2560, h: 1080, name: 'Ultrawide 21:9' }, // ultrawide
-      { w: 1024, h: 768,  name: 'Cũ 4:3' },        // máy cũ
-  ];
-
-  let sizeIdx = 0;
-  // Ctrl+T để xoay vòng qua các resolution
-  globalShortcut.register('CommandOrControl+T', () => {
-      win.setFullScreen(false); // Tắt full screen thì mới resize cửa sổ được
-      const s = TEST_SIZES[sizeIdx % TEST_SIZES.length];
-      win.setSize(s.w, s.h);
-      win.center(); // Đưa cửa sổ ra giữa màn hình
-      win.setTitle(`[TEST: ${s.name} — ${s.w}×${s.h}]`);
-      console.log(`🖥️  Testing: ${s.name} (${s.w}×${s.h})`);
-      sizeIdx++;
+  // 2. Hologram Window (VSP Monitor)
+  const isDualScreen = !!externalDisplay;
+  winHologram = new BrowserWindow({
+    ...commonProps,
+    width: isDualScreen ? externalDisplay.bounds.width : 1000,
+    height: isDualScreen ? externalDisplay.bounds.height : 700,
+    x: isDualScreen ? externalDisplay.bounds.x : primaryDisplay.bounds.x + 100,
+    y: isDualScreen ? externalDisplay.bounds.y : primaryDisplay.bounds.y + 100,
+    title: "Delphora - Hologram Projection",
+    fullscreen: isDualScreen // Tự động bật Fullscreen bên màn VSP nếu có 2 màn
   });
+  
+  winHologram.removeMenu();
+  winHologram.loadFile('src/index.html', { query: { mode: 'hologram' } });
 
-  // Ctrl+D để bật DevTools
-  globalShortcut.register('CommandOrControl+D', () => {
-      win.webContents.toggleDevTools();
-  });
-
-  // F11 để bật/tắt toàn màn hình
+  // Phím tắt chung
   globalShortcut.register('F11', () => {
-      win.setFullScreen(!win.isFullScreen());
+    const focusedWin = BrowserWindow.getFocusedWindow();
+    if (focusedWin) focusedWin.setFullScreen(!focusedWin.isFullScreen());
+  });
+  
+  globalShortcut.register('CommandOrControl+D', () => {
+    const focusedWin = BrowserWindow.getFocusedWindow();
+    if (focusedWin) focusedWin.webContents.toggleDevTools();
+  });
+
+  // ── IPC ROUTING (Control -> Hologram) ──
+  ipcMain.on('sync-action', (event, data) => {
+    if (winHologram && !winHologram.isDestroyed()) {
+        winHologram.webContents.send('sync-action', data);
+    }
   });
 
   // ── AUTO-UPDATER LOGIC ──
-  // Check updates when app is ready
   autoUpdater.checkForUpdatesAndNotify();
 
-  autoUpdater.on('update-available', () => {
-      console.log('Update available.');
-  });
-  
   autoUpdater.on('update-downloaded', () => {
-      console.log('Update downloaded.');
       dialog.showMessageBox({
           type: 'info',
           title: 'Cập nhật hoàn tất',
@@ -78,9 +84,9 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  createWindow()
+  createWindows();
 })
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
-})
+})
