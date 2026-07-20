@@ -515,9 +515,10 @@ function autoFitCamera() {
     const maxDim = Math.max(size.x, size.z);
 
     // Calculate camera distance to fit scene with current FOV
-    const W = threeRenderer.domElement.width;
-    const H = threeRenderer.domElement.height;
-    const aspect = W / H;
+    const W = threeRenderer.domElement.width || window.innerWidth;
+    const H = threeRenderer.domElement.height || window.innerHeight;
+    const aspect = H === 0 ? (16/9) : (W / H);
+    
     const fovRad = overviewCam.fov * (Math.PI / 180);
     // Adjust for aspect ratio
     const hFovRad = 2 * Math.atan(Math.tan(fovRad / 2) * aspect);
@@ -1101,7 +1102,7 @@ function onResults(results) {
                             focusRotVelY = -dx * ROT_SENS_Y * 30;
                             focusRotVelX = dy * ROT_SENS_X * 30;
                         } else {
-                            rotVelY = -dx * ROT_SENS_Y * 30;
+                            rotVelY = dx * ROT_SENS_Y * 30;
                             rotVelX = dy * ROT_SENS_X * 30;
                         }
 
