@@ -274,6 +274,15 @@ window.addEventListener('keydown', (e) => {
         return;
     }
 
+    // SWITCH CAMERA HOTKEY
+    if (e.key === 'c' || e.key === 'C') {
+        if (typeof window.currentCamIndex === 'undefined') window.currentCamIndex = 0;
+        window.currentCamIndex++;
+        console.log("📸 Bấm phím C -> Chuyển sang camera số", window.currentCamIndex);
+        if (typeof startSmartCamera === 'function') startSmartCamera();
+        return;
+    }
+
     // RESET HOTKEY
     if (e.key === 'r' || e.key === 'R') {
         localStorage.removeItem('hologramCalibration_v3');
@@ -1239,32 +1248,41 @@ async function startSmartCamera() {
             console.error("❌ Không tìm thấy camera nào!");
             return;
         }
-        
-        if (videoDevices.length > 1) {
-            // CÓ NHIỀU CAMERA: Lấy cái KHÁC với camera laptop (cái đã dùng lúc khởi động)
-            if (startupDeviceId) {
-                const externalCam = videoDevices.find(d => d.deviceId !== startupDeviceId);
-                if (externalCam) {
-                    selectedDeviceId = externalCam.deviceId;
-                    console.log("📸 [AUTO-CAMERA] Đã kết nối Camera Rời:", externalCam.label, "| id=" + externalCam.deviceId.substring(0,12));
-                    setGestureHUD("📸 ĐÃ CHUYỂN SANG CAMERA RỜI!");
+
+        // Nếu người dùng đã chủ động bấm nút đổi camera
+        if (typeof window.currentCamIndex !== 'undefined' && window.currentCamIndex !== -1) {
+            if (window.currentCamIndex >= videoDevices.length) window.currentCamIndex = 0;
+            const cam = videoDevices[window.currentCamIndex];
+            selectedDeviceId = cam.deviceId;
+            console.log("📸 [MANUAL-CAMERA] Đã chọn:", cam.label);
+            setGestureHUD(`📸 CAMERA: ${cam.label || 'Không tên'}`);
+        } else {
+            // AUTO LOGIC (cũ)
+            if (videoDevices.length > 1) {
+                if (startupDeviceId) {
+                    const externalCam = videoDevices.find(d => d.deviceId !== startupDeviceId);
+                    if (externalCam) {
+                        selectedDeviceId = externalCam.deviceId;
+                        console.log("📸 [AUTO-CAMERA] Đã kết nối Camera Rời:", externalCam.label);
+                        setGestureHUD("📸 ĐÃ CHUYỂN SANG CAMERA RỜI!");
+                    } else {
+                        selectedDeviceId = videoDevices[videoDevices.length - 1].deviceId;
+                    }
                 } else {
-                    // Fallback: Lấy cái cuối cùng
                     selectedDeviceId = videoDevices[videoDevices.length - 1].deviceId;
+                    startupDeviceId = videoDevices[0].deviceId;
+                    console.log("📸 [AUTO-CAMERA] Đã kết nối Camera Rời:", videoDevices[videoDevices.length - 1].label);
+                    setGestureHUD("📸 ĐÃ CHUYỂN SANG CAMERA RỜI!");
                 }
             } else {
-                // Lần đầu khởi động mà đã có 2 camera → lấy cái cuối
-                selectedDeviceId = videoDevices[videoDevices.length - 1].deviceId;
-                startupDeviceId = videoDevices[0].deviceId; // Ghi nhớ cái đầu tiên là laptop
-                console.log("📸 [AUTO-CAMERA] Đã kết nối Camera Rời:", videoDevices[videoDevices.length - 1].label);
-                setGestureHUD("📸 ĐÃ CHUYỂN SANG CAMERA RỜI!");
+                selectedDeviceId = videoDevices[0].deviceId;
+                if (!startupDeviceId) startupDeviceId = selectedDeviceId;
+                console.log("📸 [AUTO-CAMERA] Dùng Camera Mặc Định:", videoDevices[0].label);
+                setGestureHUD("📸 ĐANG DÙNG CAMERA LAPTOP");
             }
-        } else {
-            // CHỈ CÓ 1 CAMERA: Đây chắc chắn là camera laptop
-            selectedDeviceId = videoDevices[0].deviceId;
-            if (!startupDeviceId) startupDeviceId = selectedDeviceId; // Ghi nhớ lần đầu
-            console.log("📸 [AUTO-CAMERA] Dùng Camera Mặc Định:", videoDevices[0].label, "| id=" + videoDevices[0].deviceId.substring(0,12));
-            setGestureHUD("📸 ĐANG DÙNG CAMERA LAPTOP");
+            
+            // Cập nhật index hiện tại để lúc bấm phím C nó biết đang ở đâu
+            window.currentCamIndex = videoDevices.findIndex(d => d.deviceId === selectedDeviceId);
         }
 
         // YÊU CẦU CHÍNH XÁC camera theo deviceId
