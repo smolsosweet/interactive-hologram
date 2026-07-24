@@ -292,7 +292,7 @@ window.addEventListener('keydown', (e) => {
             document.body.classList.remove('unflip-text');
         }
         console.log("🔄 Khôi phục chiều chữ (Hologram Mode):", window.unflipText);
-        setGestureHUD(window.unflipText ? "CHỮ: CHIỀU THUẬN (THƯỜNG)" : "CHỮ: CHIỀU NGƯỢC (HOLOGRAM)");
+        // User requested no notification on camera tab
         return;
     }
 
