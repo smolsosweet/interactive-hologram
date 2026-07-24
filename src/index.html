@@ -787,30 +787,14 @@
     // Exit app logic & Keyboard Shortcuts
     const closeApp = () => { window.close(); };
     
-    window.addEventListener('keydown', (e) => {
+        window.addEventListener('keydown', (e) => {
         const key = e.key.toLowerCase();
-        
         if (key === 'escape') {
             closeApp();
-        } 
-        else if (key === 't') {
-            // T: Bật/tắt Tab thông tin CHỈ khi đang ở trong chế độ Focus (có class in-focus)
-            if (document.body.classList.contains('in-focus')) {
-                const infoBtn = document.getElementById('info-toggle-btn');
-                if (infoBtn) infoBtn.click();
-            }
-        } 
-        else if (key === 'c') {
-            // C: Bật/tắt Camera
-            camBtn.click();
-        } 
-        else if (key === 'h') {
-            // H: Disabled in dual-screen mode (mode is set automatically)
-            // document.body.classList.toggle('hologram-mode');
+        } else if (['t', 'c', 'h'].includes(key)) {
+            window.dispatchEvent(new CustomEvent('app-hotkey', {detail: key}));
         }
     });
-    
-    
 </script>
 </body>
 </html>
