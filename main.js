@@ -35,16 +35,15 @@ function createWindows() {
   winControl.removeMenu();
   winControl.loadFile('src/index.html', { query: { mode: 'control' } });
 
-  // 2. Hologram Window (VSP Monitor)
-  const isDualScreen = !!externalDisplay;
+  // 2. Hologram Window
   winHologram = new BrowserWindow({
     ...commonProps,
-    width: isDualScreen ? externalDisplay.bounds.width : 1000,
-    height: isDualScreen ? externalDisplay.bounds.height : 700,
-    x: isDualScreen ? externalDisplay.bounds.x : primaryDisplay.bounds.x + 100,
-    y: isDualScreen ? externalDisplay.bounds.y : primaryDisplay.bounds.y + 100,
+    width: 1000,
+    height: 700,
+    x: primaryDisplay.bounds.x + 100,
+    y: primaryDisplay.bounds.y + 100,
     title: "Delphora - Hologram Projection",
-    fullscreen: isDualScreen // Tự động bật Fullscreen bên màn VSP nếu có 2 màn
+    fullscreen: false // Người dùng tự kéo sang màn hình rời và ấn F11
   });
   
   winHologram.removeMenu();
