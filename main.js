@@ -60,10 +60,13 @@ function createWindows() {
     if (focusedWin) focusedWin.webContents.toggleDevTools();
   });
 
-  // ── IPC ROUTING (Control -> Hologram) ──
+  // ── IPC ROUTING (Bidirectional) ──
   ipcMain.on('sync-action', (event, data) => {
-    if (winHologram && !winHologram.isDestroyed()) {
+    if (winHologram && !winHologram.isDestroyed() && event.sender !== winHologram.webContents) {
         winHologram.webContents.send('sync-action', data);
+    }
+    if (winControl && !winControl.isDestroyed() && event.sender !== winControl.webContents) {
+        winControl.webContents.send('sync-action', data);
     }
   });
 

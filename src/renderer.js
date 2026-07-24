@@ -466,7 +466,76 @@ function updateHUD() {
         s.textContent = info.nameEn;
     }
 }
-function setGestureHUD(text) { const el = document.getElementById('hud-gesture'); if (el) el.textContent = text; }
+const HUD_TRANSLATIONS = {
+    'en': {
+        'ĐÃ LƯU VỊ TRÍ': 'POSITION SAVED',
+        'ĐÃ RESET VỀ MẶC ĐỊNH!': 'RESET TO DEFAULT!',
+        'DI CHUYỂN (2 NẮM TAY)': 'MOVE (2 FISTS)',
+        'ĐANG XOAY...': 'ROTATING...',
+        'GIỮ ĐỂ QUAY VỀ...': 'HOLD TO RETURN...',
+        'GIỮ ĐỂ RESET...': 'HOLD TO RESET...',
+        'GIỮ NẮM TAY ĐỂ QUAY VỀ': 'HOLD FIST TO RETURN',
+        'GIỮ NẮM TAY ĐỂ RESET': 'HOLD FIST TO RESET',
+        'TAY PHẢI': 'RIGHT HAND',
+        'TAY TRÁI': 'LEFT HAND',
+        'NGÓN': 'FINGERS',
+        'ĐANG TẢI MODEL...': 'LOADING MODEL...',
+        'SẴN SÀNG': 'READY',
+        'CAMERA:': 'CAMERA:',
+        'ĐÃ CHUYỂN SANG CAMERA RỜI!': 'SWITCHED TO EXTERNAL CAMERA!',
+        'ĐANG DÙNG CAMERA LAPTOP': 'USING LAPTOP CAMERA',
+        'LỖI:': 'ERROR:',
+        'ĐANG QUÉT CAMERA MỚI...': 'SCANNING FOR NEW CAMERA...'
+    },
+    'zh': {
+        'ĐÃ LƯU VỊ TRÍ': '已保存位置',
+        'ĐÃ RESET VỀ MẶC ĐỊNH!': '已重置为默认！',
+        'DI CHUYỂN (2 NẮM TAY)': '移动（双拳）',
+        'ĐANG XOAY...': '旋转中...',
+        'GIỮ ĐỂ QUAY VỀ...': '长按返回...',
+        'GIỮ ĐỂ RESET...': '长按重置...',
+        'GIỮ NẮM TAY ĐỂ QUAY VỀ': '保持握拳返回',
+        'GIỮ NẮM TAY ĐỂ RESET': '保持握拳重置',
+        'TAY PHẢI': '右手',
+        'TAY TRÁI': '左手',
+        'NGÓN': '指',
+        'ĐANG TẢI MODEL...': '正在加载模型...',
+        'SẴN SÀNG': '准备就绪',
+        'CAMERA:': '相机:',
+        'ĐÃ CHUYỂN SANG CAMERA RỜI!': '已切换到外接相机！',
+        'ĐANG DÙNG CAMERA LAPTOP': '正在使用笔记本电脑相机',
+        'LỖI:': '错误:',
+        'ĐANG QUÉT CAMERA MỚI...': '正在扫描新相机...'
+    }
+};
+
+function translateHUD(text) {
+    if (!text || text === 'undefined') return '';
+    let t = text;
+    if (window.currentAppLang && window.currentAppLang !== 'vi') {
+        const lang = window.currentAppLang;
+        const dict = HUD_TRANSLATIONS[lang];
+        if (dict) {
+            if (typeof PLANET_INFO !== 'undefined') {
+                for (let info of PLANET_INFO) {
+                    if (t.includes(info.vi.name)) {
+                        t = t.replace(info.vi.name, info[lang].name);
+                    }
+                }
+            }
+            for (let [viStr, transStr] of Object.entries(dict)) {
+                t = t.replace(viStr, transStr);
+            }
+        }
+    }
+    return t;
+}
+
+function setGestureHUD(text) {
+    if (text === 'undefined') return;
+    const el = document.getElementById('hud-gesture');
+    if (el) el.textContent = translateHUD(text);
+}
 function setProgressHUD(pct) {
     const bar = document.getElementById('hud-progress-fill');
     const wrap = document.getElementById('hud-progress');
@@ -489,6 +558,13 @@ window.setAppLang = function(lang) {
     document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
     const activeBtn = document.querySelector(`.lang-btn[onclick="setAppLang('${lang}')"]`);
     if (activeBtn) activeBtn.classList.add('active');
+    
+    const idleText = document.getElementById('idle-text');
+    if (idleText) {
+        if (lang === 'vi') idleText.textContent = 'Đưa tay lên để bắt đầu khám phá';
+        else if (lang === 'en') idleText.textContent = 'Raise your hand to start exploring';
+        else if (lang === 'zh') idleText.textContent = '举手开始探索';
+    }
     
     if (APP_MODE === 'control') {
         const { ipcRenderer } = require('electron');
@@ -516,6 +592,19 @@ function updatePlanetInfoPanel(idx) {
         `<div class="pp-stat"><div class="pp-stat-label">${s.label}</div><div class="pp-stat-value">${s.value}</div></div>`
     ).join('');
     document.getElementById('pp-description').textContent = langData.desc;
+    
+    const descLabel = document.getElementById('pp-desc-label');
+    const footerText = document.getElementById('pp-footer-text');
+    if (window.currentAppLang === 'vi') {
+        if(descLabel) descLabel.textContent = '📖 Giới thiệu';
+        if(footerText) footerText.textContent = 'Nắm tay (giữ ~1.5s) để quay về hệ mặt trời';
+    } else if (window.currentAppLang === 'en') {
+        if(descLabel) descLabel.textContent = '📖 Overview';
+        if(footerText) footerText.textContent = 'Clench fist (~1.5s) to return to solar system';
+    } else if (window.currentAppLang === 'zh') {
+        if(descLabel) descLabel.textContent = '📖 简介';
+        if(footerText) footerText.textContent = '握拳（约1.5秒）返回太阳系';
+    }
 }
 
 let isInfoPanelVisible = false;
@@ -1710,6 +1799,9 @@ if (APP_MODE === "hologram") {
             } else {
                 document.body.classList.remove('unflip-text');
             }
+        }
+        if (data.hotkey) {
+            executeHotkey(data.hotkey);
         }
         
         if (data.lang) {

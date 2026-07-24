@@ -653,12 +653,6 @@
 </head>
 
 <body>
-<div id="loading-overlay">
-    <div class="loading-spinner"></div>
-    <div class="loading-text" id="loading-text">KHỞI ĐỘNG HỆ THỐNG...</div>
-    <div id="loading-progress">0%</div>
-</div>
-
 <div id="lang-controls">
     <button class="lang-btn active" onclick="setAppLang('vi')">Tiếng Việt</button>
     <button class="lang-btn" onclick="setAppLang('en')">English</button>
@@ -672,7 +666,7 @@
 
     <!-- Idle Attract Mode Overlay -->
     <div id="idle-overlay">
-        <div class="idle-text">Đưa tay lên để bắt đầu khám phá</div>
+        <div class="idle-text" id="idle-text">Đưa tay lên để bắt đầu khám phá</div>
     </div>
 
     <!-- ========================================================
@@ -704,14 +698,14 @@
             <div class="pp-divider" style="margin-bottom:18px;"></div>
 
             <!-- Description -->
-            <div class="pp-desc-label">📖 Giới thiệu</div>
+            <div class="pp-desc-label" id="pp-desc-label">📖 Giới thiệu</div>
             <div class="pp-description" id="pp-description">...</div>
         </div>
 
         <!-- Footer with gesture hint -->
         <div class="pp-footer">
             <span class="pp-footer-icon">✊</span>
-            <span class="pp-footer-text">Nắm tay (giữ ~1.5s) để quay về hệ mặt trời</span>
+            <span class="pp-footer-text" id="pp-footer-text">Nắm tay (giữ ~1.5s) để quay về hệ mặt trời</span>
         </div>
     </div>
 
@@ -769,10 +763,18 @@
     }, 300);
     setTimeout(() => { clearInterval(checkLoaded); overlay.classList.add('hidden'); }, 30000);
 
-    // Camera feed toggle (default: hidden)
+    // Camera feed toggle
     const camBtn    = document.getElementById('cam-toggle-btn');
     const camCanvas = document.querySelector('canvas.output_canvas');
-    let camVisible  = false;
+    const isControlMode = new URLSearchParams(window.location.search).get("mode") === "control";
+    let camVisible = false;
+    
+    if (camVisible) {
+        camCanvas.style.display = 'block';
+        camBtn.classList.add('cam-on');
+        camBtn.textContent = '🎥';
+        camBtn.title = 'Tắt camera';
+    }
 
     camBtn.addEventListener('click', () => {
         camVisible = !camVisible;
