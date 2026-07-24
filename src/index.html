@@ -615,7 +615,37 @@
         body.control-mode #hud-gesture-wrap {
             z-index: 10 !important;
         }
-</style>
+
+        /* Language Switcher on Control Mode only */
+        #lang-controls {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 100;
+            display: none; /* Only show in control mode */
+            gap: 10px;
+        }
+        body.control-mode #lang-controls { display: flex; }
+        
+        .lang-btn {
+            background: rgba(0, 5, 15, 0.7);
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        .lang-btn:hover { background: rgba(100, 200, 255, 0.2); }
+        .lang-btn.active {
+            background: rgba(100, 200, 255, 0.4);
+            color: #fff;
+            border-color: #64c8ff;
+            box-shadow: 0 0 10px rgba(100, 200, 255, 0.3);
+        }
 </style>
 
     <!-- MediaPipe (local from node_modules) -->
@@ -625,6 +655,18 @@
 </head>
 
 <body>
+<div id="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loading-text">KHỞI ĐỘNG HỆ THỐNG...</div>
+    <div id="loading-progress">0%</div>
+</div>
+
+<div id="lang-controls">
+    <button class="lang-btn active" onclick="setAppLang('vi')">Tiếng Việt</button>
+    <button class="lang-btn" onclick="setAppLang('en')">English</button>
+    <button class="lang-btn" onclick="setAppLang('zh')">中文</button>
+</div>
+
 <div id="app-container">
 
     <!-- THREE.js canvas -->
