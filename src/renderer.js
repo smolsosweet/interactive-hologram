@@ -286,7 +286,7 @@ let currentFocusCalibZoom = 1.0;
 
 // Idle Mode / Screensaver
 let lastInteractionTime = Date.now();
-const IDLE_TIMEOUT_MS = 30000; // 30 giây không có tay sẽ tự động reset
+const IDLE_TIMEOUT_MS = 300000; // 5 phút không có tay sẽ tự động reset
 
 
 // Load saved hologram fine-tune from localStorage
