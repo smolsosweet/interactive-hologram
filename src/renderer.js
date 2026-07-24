@@ -329,18 +329,7 @@ window.addEventListener('keydown', (e) => {
         return;
     }
 
-    // H HOTKEY to toggle text inversion for presentation
-    if (e.key === 'h' || e.key === 'H') {
-        window.unflipText = !window.unflipText;
-        if (window.unflipText) {
-            document.body.classList.add('unflip-text');
-        } else {
-            document.body.classList.remove('unflip-text');
-        }
-        console.log("🔄 Khôi phục chiều chữ (Hologram Mode):", window.unflipText);
-        // User requested no notification on camera tab
-        return;
-    }
+
 
     // RESET HOTKEY
     if (e.key === 'r' || e.key === 'R') {
@@ -1800,7 +1789,7 @@ window.addEventListener('resize', () => {
             }
         }
         if (data.hotkey) {
-            executeHotkey(data.hotkey);
+            window.executeHotkey(data.hotkey);
         }
         
         if (data.lang) {
@@ -1831,3 +1820,28 @@ window.addEventListener('resize', () => {
             }
         }
     });
+
+// Global Hotkey Sync
+window.executeHotkey = function(key) {
+    if (key === 't') {
+        const infoBtn = document.getElementById('info-toggle-btn');
+        if (infoBtn) infoBtn.click();
+    } else if (key === 'c') {
+        const camBtn = document.getElementById('cam-toggle-btn');
+        if (camBtn) camBtn.click();
+    } else if (key === 'h') {
+        window.unflipText = !window.unflipText;
+        if (window.unflipText) {
+            document.body.classList.add('unflip-text');
+        } else {
+            document.body.classList.remove('unflip-text');
+        }
+    }
+}
+
+window.addEventListener('app-hotkey', (e) => {
+    const key = e.detail;
+    window.executeHotkey(key);
+    const { ipcRenderer } = require('electron');
+    ipcRenderer.send('sync-action', { hotkey: key });
+});
