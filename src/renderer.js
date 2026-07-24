@@ -1332,7 +1332,7 @@ function onResults(results) {
                     // FINGERS — select planet
                     const planetIdx = fingersToPlanetIdx(fingers, isRight);
                     if (planetIdx >= 0 && planetIdx < 9) {
-                        const pName = PLANET_INFO[planetIdx].nameVi;
+                        const pName = PLANET_INFO[planetIdx]?.vi?.name;
                         setGestureHUD(`TAY ${isRight ? 'PHẢI' : 'TRÁI'} - ${fingers} NGÓN (${pName})`);
 
                         if (fingers === fingerBuf) {
