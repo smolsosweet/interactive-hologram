@@ -1784,7 +1784,6 @@ window.addEventListener('resize', () => {
     if (solarSystemLoaded) autoFitCamera();
 });
 
-if (APP_MODE === "hologram") {
     ipcRenderer.on("sync-action", (e, data) => {
         if (data.overviewQuat && !isNaN(data.overviewQuat[0])) modelGroup.quaternion.set(data.overviewQuat[0], data.overviewQuat[1], data.overviewQuat[2], data.overviewQuat[3]);
         if (data.focusQuat && !isNaN(data.focusQuat[0])) focusSpinner.quaternion.set(data.focusQuat[0], data.focusQuat[1], data.focusQuat[2], data.focusQuat[3]);
@@ -1832,4 +1831,3 @@ if (APP_MODE === "hologram") {
             }
         }
     });
-}
