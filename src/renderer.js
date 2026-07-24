@@ -1807,9 +1807,10 @@ window.addEventListener('resize', () => {
         if (data.panTarget && !isNaN(data.panTarget[0])) panTarget.set(data.panTarget[0], data.panTarget[1], data.panTarget[2]);
         if (data.focusPanTarget && !isNaN(data.focusPanTarget[0])) focusPanTarget.set(data.focusPanTarget[0], data.focusPanTarget[1], data.focusPanTarget[2]);
         
-        if (data.inPlanetFocus !== inPlanetFocus || data.focusIndex !== focusIndex) {
-            inPlanetFocus = data.inPlanetFocus;
-            focusIndex = data.focusIndex;
+        if (typeof data.inPlanetFocus !== 'undefined' && typeof data.focusIndex !== 'undefined') {
+            if (data.inPlanetFocus !== inPlanetFocus || data.focusIndex !== focusIndex) {
+                inPlanetFocus = data.inPlanetFocus;
+                focusIndex = data.focusIndex;
             
             if (inPlanetFocus) {
                 setFocusModel(focusIndex);
@@ -1819,7 +1820,8 @@ window.addEventListener('resize', () => {
                 hidePlanetPanel();
             }
         }
-    });
+    }
+});
 
 // Global Hotkey Sync
 window.executeHotkey = function(key) {
