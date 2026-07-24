@@ -380,6 +380,18 @@
             transform: scaleX(-1);
         }
 
+        /* Khi người dùng ấn H để lật chữ lại bình thường cho màn hình thường */
+        body.unflip-text .pp-scroll,
+        body.unflip-text #hud-gesture-wrap,
+        body.unflip-text #loading-text,
+        body.unflip-text #exit-app-btn {
+            transform: scaleX(1) !important;
+        }
+        
+        body.unflip-text #hud-logos img {
+            transform: scaleX(1) !important;
+        }
+
         #hud-gesture-wrap {
             position: absolute;
             bottom: 28px; left: 24px;

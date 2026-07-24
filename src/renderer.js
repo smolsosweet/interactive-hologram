@@ -283,6 +283,19 @@ window.addEventListener('keydown', (e) => {
         return;
     }
 
+    // H HOTKEY to toggle text inversion for presentation
+    if (e.key === 'h' || e.key === 'H') {
+        window.unflipText = !window.unflipText;
+        if (window.unflipText) {
+            document.body.classList.add('unflip-text');
+        } else {
+            document.body.classList.remove('unflip-text');
+        }
+        console.log("🔄 Khôi phục chiều chữ (Hologram Mode):", window.unflipText);
+        setGestureHUD(window.unflipText ? "CHỮ: CHIỀU THUẬN (THƯỜNG)" : "CHỮ: CHIỀU NGƯỢC (HOLOGRAM)");
+        return;
+    }
+
     // RESET HOTKEY
     if (e.key === 'r' || e.key === 'R') {
         localStorage.removeItem('hologramCalibration_v3');
@@ -485,7 +498,7 @@ function slidePanelSwitch(newIdx) {
     if (!scroll) { updatePlanetInfoPanel(newIdx); return; }
 
     const isHolo = document.body.classList.contains('hologram-mode');
-    const scaleStr = isHolo ? 'scaleX(-1)' : 'scaleX(1)';
+    const scaleStr = isHolo && !window.unflipText ? 'scaleX(-1)' : 'scaleX(1)';
 
     scroll.style.transition = 'transform 0.22s ease, opacity 0.22s ease';
     scroll.style.transform = `translateX(-40px) ${scaleStr}`;
@@ -1487,7 +1500,8 @@ function animate() {
             targetOverviewZoomFactor: targetOverviewZoomFactor,
             targetFocusZoomFactor: targetFocusZoomFactor,
             panTarget: [panTarget.x, panTarget.y, panTarget.z],
-            focusPanTarget: [focusPanTarget.x, focusPanTarget.y, focusPanTarget.z]
+            focusPanTarget: [focusPanTarget.x, focusPanTarget.y, focusPanTarget.z],
+            unflipText: window.unflipText
         });
     }
 }
@@ -1617,6 +1631,15 @@ if (APP_MODE === "hologram") {
         if (typeof data.transitionTarget === "number" && !isNaN(data.transitionTarget)) transitionTarget = data.transitionTarget;
         if (typeof data.transitionProgress === "number" && !isNaN(data.transitionProgress)) transitionProgress = data.transitionProgress;
         lastInteractionTime = data.lastInteractionTime;
+        
+        if (typeof data.unflipText !== "undefined") {
+            window.unflipText = data.unflipText;
+            if (window.unflipText) {
+                document.body.classList.add('unflip-text');
+            } else {
+                document.body.classList.remove('unflip-text');
+            }
+        }
         
         if (typeof targetRotationY !== "undefined") targetRotationY = data.targetRotationY;
         if (typeof targetRotationX !== "undefined") targetRotationX = data.targetRotationX;
