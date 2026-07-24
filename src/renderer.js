@@ -1285,9 +1285,13 @@ async function startSmartCamera() {
             window.currentCamIndex = videoDevices.findIndex(d => d.deviceId === selectedDeviceId);
         }
 
-        // YÊU CẦU CHÍNH XÁC camera theo deviceId
+        // YÊU CẦU CHÍNH XÁC camera theo deviceId, nới lỏng constraint để tránh OverconstrainedError
         currentCameraStream = await navigator.mediaDevices.getUserMedia({
-            video: { width: 640, height: 480, deviceId: { exact: selectedDeviceId } }
+            video: { 
+                width: { ideal: 640 }, 
+                height: { ideal: 480 }, 
+                deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined 
+            }
         });
 
         const actualLabel = currentCameraStream.getVideoTracks()[0].label;
@@ -1309,7 +1313,7 @@ async function startSmartCamera() {
 
     } catch (err) {
         console.error("❌ Lỗi khởi tạo Camera:", err);
-        setGestureHUD("❌ LỖI CAMERA!");
+        setGestureHUD(`❌ LỖI: ${err.name || err.message || "Không rõ"}`);
     }
 }
 if (APP_MODE === "control") startSmartCamera();

@@ -1,6 +1,6 @@
 {
   "name": "delphora",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Interactive 3D Solar System Hologram with hand gesture control",
   "author": "smolsosweet",
   "main": "main.js",
@@ -32,7 +32,7 @@
     "mac": {
       "icon": "build/icon.png",
       "extendInfo": {
-        "NSCameraUsageDescription": "Ứng dụng cần quyền sử dụng Camera để nhận diện cử chỉ tay (Hand Tracking) điều khiển Hologram."
+        "NSCameraUsageDescription": "This app requires camera access for hand gesture tracking."
       },
       "target": [
         {
