@@ -1379,7 +1379,11 @@ async function startSmartCamera() {
         console.log("📸 [STREAM] Thực tế đang chạy:", actualLabel, "| id=" + (actualId || '').substring(0,12));
 
         videoElement.srcObject = currentCameraStream;
-        await videoElement.play();
+        try {
+            await videoElement.play();
+        } catch (playErr) {
+            console.warn('Ignored interrupted play():', playErr.message);
+        }
 
         let lastVideoTime = -1;
         const processFrame = async () => {

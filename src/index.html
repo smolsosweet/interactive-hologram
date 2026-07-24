@@ -370,8 +370,7 @@
            ==================================================== */
         body.hologram-mode .pp-scroll,
         body.hologram-mode #hud-gesture-wrap,
-        body.hologram-mode #loading-text,
-        body.hologram-mode #exit-app-btn {
+        body.hologram-mode #loading-text {
             transform: scaleX(-1);
         }
         
@@ -383,8 +382,7 @@
         /* Khi người dùng ấn H để lật chữ lại bình thường cho màn hình thường */
         body.hologram-mode.unflip-text .pp-scroll,
         body.hologram-mode.unflip-text #hud-gesture-wrap,
-        body.hologram-mode.unflip-text #loading-text,
-        body.hologram-mode.unflip-text #exit-app-btn {
+        body.hologram-mode.unflip-text #loading-text {
             transform: scaleX(1) !important;
         }
 
@@ -735,7 +733,7 @@
     </div>
 
     <!-- Exit button -->
-    <button id="exit-app-btn" title="Thoát ứng dụng (Phím ESC)">✕</button>
+    
 
     <!-- HUD: Gesture indicator + progress bar -->
     <div id="hud-gesture-wrap">
@@ -810,7 +808,7 @@
         }
     });
     
-    document.getElementById('exit-app-btn').addEventListener('click', closeApp);
+    
 </script>
 </body>
 </html>
