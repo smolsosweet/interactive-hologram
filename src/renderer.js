@@ -1126,6 +1126,7 @@ let fingerBuf = -1;
 let fingerHoldN = 0;
 let rotVelX = 0, rotVelY = 0;
 let focusRotVelX = 0, focusRotVelY = 0;
+let prevIsRight = null;
 let handRotating = false;
 
 // ============================================================
@@ -1254,8 +1255,21 @@ function onResults(results) {
             lastPinchDist = null; prevPanPos = null; smoothedPanPos = null;
             const lm = results.multiHandLandmarks[0];
             const pPos = { x: lm[9].x, y: lm[9].y };
-            let velocity = prevPalmPos ? Math.hypot(pPos.x - prevPalmPos.x, pPos.y - prevPalmPos.y) : 0;
             const isRight = isRightHand(results.multiHandedness[0]);
+
+            // Reset velocity calculation if handedness classification flickers/changes
+            if (prevIsRight !== null && prevIsRight !== isRight) {
+                prevPalmPos = null;
+            }
+            prevIsRight = isRight;
+
+            let velocity = prevPalmPos ? Math.hypot(pPos.x - prevPalmPos.x, pPos.y - prevPalmPos.y) : 0;
+
+            // Ignore massive tracking jumps (MediaPipe glitch)
+            if (velocity > 0.3) {
+                velocity = 0;
+                prevPalmPos = { ...pPos };
+            }
 
             if (velocity > PALM_MOVE_THRESH) {
                 // ROTATE - strictly Right Hand only
@@ -1360,6 +1374,7 @@ function onResults(results) {
         prevPalmPos = null; lastPinchDist = null; prevPanPos = null; smoothedPanPos = null;
         fingerBuf = -1; fingerHoldN = 0; setProgressHUD(0); setGestureHUD('');
         stableFingerCount = -1; stableFingerCandidate = -1; stableFingerStreak = 0;
+        prevIsRight = null;
     }
     canvasCtx.restore();
 }
@@ -1521,8 +1536,8 @@ function animate() {
     }
 
     // ── Transition animation ──
-    transitionProgress = THREE.MathUtils.lerp(transitionProgress, transitionTarget, 0.08);
-    if (Math.abs(transitionProgress - transitionTarget) < 0.003) transitionProgress = transitionTarget;
+    // Removed lerp to make transition instant and eliminate lag
+    transitionProgress = transitionTarget;
 
     // Show/hide based on transition
     const inFocusView = transitionProgress > 0.02;
@@ -1826,6 +1841,7 @@ window.addEventListener('resize', () => {
 // Global Hotkey Sync
 window.executeHotkey = function(key) {
     if (key === 't') {
+        if (!inPlanetFocus) return; // Chỉ cho phép bật tắt info khi ở chế độ focus
         const infoBtn = document.getElementById('info-toggle-btn');
         if (infoBtn) infoBtn.click();
     } else if (key === 'c') {
