@@ -1432,21 +1432,16 @@ async function startSmartCamera() {
         } else {
             // AUTO LOGIC (cũ)
             if (videoDevices.length > 1) {
-                if (startupDeviceId) {
-                    const externalCam = videoDevices.find(d => d.deviceId !== startupDeviceId);
-                    if (externalCam) {
-                        selectedDeviceId = externalCam.deviceId;
-                        console.log("📸 [AUTO-CAMERA] Đã kết nối Camera Rời:", externalCam.label);
-                        setGestureHUD("📸 ĐÃ CHUYỂN SANG CAMERA RỜI!");
-                    } else {
-                        selectedDeviceId = videoDevices[videoDevices.length - 1].deviceId;
-                    }
-                } else {
-                    selectedDeviceId = videoDevices[videoDevices.length - 1].deviceId;
-                    startupDeviceId = videoDevices[0].deviceId;
-                    console.log("📸 [AUTO-CAMERA] Đã kết nối Camera Rời:", videoDevices[videoDevices.length - 1].label);
-                    setGestureHUD("📸 ĐÃ CHUYỂN SANG CAMERA RỜI!");
-                }
+                // Lấy camera cuối cùng trong danh sách (thường là USB camera mới cắm)
+                // Tránh tình trạng nhận nhầm IR Camera của laptop
+                const usbCam = videoDevices.find(d => d.label.toLowerCase().includes('usb'));
+                const externalCam = usbCam || videoDevices[videoDevices.length - 1];
+                
+                selectedDeviceId = externalCam.deviceId;
+                if (!startupDeviceId) startupDeviceId = videoDevices[0].deviceId;
+                
+                console.log("📸 [AUTO-CAMERA] Đã kết nối Camera Rời:", externalCam.label);
+                setGestureHUD("📸 ĐÃ CHUYỂN SANG CAMERA RỜI!");
             } else {
                 selectedDeviceId = videoDevices[0].deviceId;
                 if (!startupDeviceId) startupDeviceId = selectedDeviceId;
@@ -1480,9 +1475,13 @@ async function startSmartCamera() {
 
         let lastVideoTime = -1;
         const processFrame = async () => {
-            if (videoElement.readyState >= 2 && videoElement.currentTime !== lastVideoTime) {
+            if (videoElement.readyState >= 2 && videoElement.videoWidth > 0 && videoElement.currentTime !== lastVideoTime) {
                 lastVideoTime = videoElement.currentTime;
-                await hands.send({ image: videoElement });
+                try {
+                    await hands.send({ image: videoElement });
+                } catch (e) {
+                    console.warn("MediaPipe processing skipped frame:", e.message);
+                }
             }
             cameraLoopFrame = requestAnimationFrame(processFrame);
         };
@@ -1844,6 +1843,11 @@ window.executeHotkey = function(key) {
         if (!inPlanetFocus) return; // Chỉ cho phép bật tắt info khi ở chế độ focus
         const infoBtn = document.getElementById('info-toggle-btn');
         if (infoBtn) infoBtn.click();
+    } else if (key === 'v') {
+        // Chuyển đổi camera thủ công
+        if (typeof window.currentCamIndex === 'undefined') window.currentCamIndex = -1;
+        window.currentCamIndex++;
+        if (typeof startSmartCamera === 'function') startSmartCamera();
     } else if (key === 'c') {
         const camBtn = document.getElementById('cam-toggle-btn');
         if (camBtn) camBtn.click();

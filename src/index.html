@@ -791,7 +791,7 @@
         const key = e.key.toLowerCase();
         if (key === 'escape') {
             closeApp();
-        } else if (['t', 'c', 'h'].includes(key)) {
+        } else if (['t', 'c', 'h', 'v'].includes(key)) {
             window.dispatchEvent(new CustomEvent('app-hotkey', {detail: key}));
         }
     });
