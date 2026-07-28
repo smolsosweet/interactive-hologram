@@ -1201,7 +1201,7 @@ function onResults(results) {
                         const camRight = new THREE.Vector3(1, 0, 0).applyQuaternion(focusCam.quaternion).normalize();
                         // panSpeed is relative to distance
                         const panSpeed = focusCamDist * 1.5;
-                        // Invert dx and dy because we are moving the model directly, not the camera
+                        // Inverted dx to fix left/right drag behavior
                         focusPanTarget.add(camRight.multiplyScalar(-dx * panSpeed));
                         focusPanTarget.add(camUp.multiplyScalar(-dy * panSpeed));
                     } else {
@@ -1209,7 +1209,7 @@ function onResults(results) {
                         const camRight = new THREE.Vector3(1, 0, 0).applyQuaternion(overviewCam.quaternion).normalize();
                         // panSpeed is relative to base zoom, NOT current zoom, so panTarget becomes a normalized screen offset
                         const panSpeed = overviewBasePos.z * 2.2;
-                        // Inverted dx to match hand physical direction
+                        // Inverted dx to fix left/right drag behavior
                         panTarget.add(camRight.multiplyScalar(dx * panSpeed));
                         panTarget.add(camUp.multiplyScalar(dy * panSpeed));
                     }
@@ -1280,10 +1280,10 @@ function onResults(results) {
                         const dy = pPos.y - prevPalmPos.y;
                         if (inPlanetFocus) {
                             // Inverted dx so model rotates matching hand direction
-                            focusRotVelY = -dx * ROT_SENS_Y * 30;
+                            focusRotVelY = dx * ROT_SENS_Y * 30;
                             focusRotVelX = dy * ROT_SENS_X * 30;
                         } else {
-                            rotVelY = dx * ROT_SENS_Y * 30;
+                            rotVelY = -dx * ROT_SENS_Y * 30;
                             rotVelX = dy * ROT_SENS_X * 30;
                         }
 
