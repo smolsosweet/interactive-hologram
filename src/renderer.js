@@ -1,8 +1,12 @@
 import * as THREE from 'https://cdn.skypack.dev/three@0.132.2';
 import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/GLTFLoader.js';
 
-const path = require('path');
-const { ipcRenderer } = require('electron');
+let path = null;
+let ipcRenderer = null;
+if (typeof require !== 'undefined') {
+    path = require('path');
+    ipcRenderer = require('electron').ipcRenderer;
+}
 
 const urlParams = new URLSearchParams(window.location.search);
 const APP_MODE = urlParams.get('mode') || 'control';
@@ -557,8 +561,9 @@ window.setAppLang = function(lang) {
     }
     
     if (APP_MODE === 'control') {
-        const { ipcRenderer } = require('electron');
-        ipcRenderer.send('sync-action', { lang: lang });
+        if (ipcRenderer) {
+            ipcRenderer.send('sync-action', { lang: lang });
+        }
     }
     
     if (inPlanetFocus && focusIndex !== -1) {
@@ -1705,7 +1710,7 @@ function animate() {
     renderFrame();
 
     if (APP_MODE === "control") {
-        ipcRenderer.send("sync-action", {
+        if (ipcRenderer) ipcRenderer.send("sync-action", {
             overviewQuat: [modelGroup.quaternion.x, modelGroup.quaternion.y, modelGroup.quaternion.z, modelGroup.quaternion.w],
             focusQuat: [focusSpinner.quaternion.x, focusSpinner.quaternion.y, focusSpinner.quaternion.z, focusSpinner.quaternion.w],
             inPlanetFocus: inPlanetFocus,
@@ -1843,7 +1848,7 @@ window.addEventListener('resize', () => {
     if (solarSystemLoaded) autoFitCamera();
 });
 
-    ipcRenderer.on("sync-action", (e, data) => {
+    if (ipcRenderer) ipcRenderer.on("sync-action", (e, data) => {
         if (data.overviewQuat && !isNaN(data.overviewQuat[0])) modelGroup.quaternion.set(data.overviewQuat[0], data.overviewQuat[1], data.overviewQuat[2], data.overviewQuat[3]);
         if (data.focusQuat && !isNaN(data.focusQuat[0])) focusSpinner.quaternion.set(data.focusQuat[0], data.focusQuat[1], data.focusQuat[2], data.focusQuat[3]);
         if (typeof data.transitionTarget === "number" && !isNaN(data.transitionTarget)) transitionTarget = data.transitionTarget;
@@ -1920,6 +1925,5 @@ window.executeHotkey = function(key) {
 window.addEventListener('app-hotkey', (e) => {
     const key = e.detail;
     window.executeHotkey(key);
-    const { ipcRenderer } = require('electron');
-    ipcRenderer.send('sync-action', { hotkey: key });
+    if (ipcRenderer) ipcRenderer.send('sync-action', { hotkey: key });
 });
