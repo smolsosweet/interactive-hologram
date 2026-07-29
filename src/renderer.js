@@ -1149,6 +1149,12 @@ function onResults(results) {
             overlay.classList.remove('active');
         }
 
+        // Đảm bảo không có bàn tay nào bị lỗi/thiếu điểm từ MediaPipe (chống crash undefined reading x)
+        if (results.multiHandLandmarks.some(lm => !lm || lm.length < 21)) {
+            canvasCtx.restore();
+            return;
+        }
+
         for (const lm of results.multiHandLandmarks) {
             drawConnectors(canvasCtx, lm, HAND_CONNECTIONS, { color: '#00FF88', lineWidth: 2 });
             drawLandmarks(canvasCtx, lm, { color: '#FF4444', lineWidth: 1 });
