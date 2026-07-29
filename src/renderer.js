@@ -912,7 +912,7 @@ function switchPlanetModel(newIdx) {
 // ============================================================
 function loadSolarSystem() {
     const loader = new GLTFLoader();
-    const modelPath = path.join(__dirname, '../models', 'solar_system.glb');
+    const modelPath = typeof path !== 'undefined' && path ? path.join(__dirname, '../models', 'solar_system.glb') : '../models/solar_system.glb';
 
     loader.load(modelPath, (gltf) => {
         const root = gltf.scene;
@@ -1427,7 +1427,7 @@ function onResults(results) {
 // ============================================================
 // 12. MEDIAPIPE SETUP
 // ============================================================
-const hands = new Hands({ locateFile: f => path.join(__dirname, '../node_modules/@mediapipe/hands', f) });
+const hands = new Hands({ locateFile: f => path ? path.join(__dirname, '../node_modules/@mediapipe/hands', f) : '../node_modules/@mediapipe/hands/' + f });
 hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.75, minTrackingConfidence: 0.75 });
 hands.onResults(onResults);
 let currentCameraStream = null;
