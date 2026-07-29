@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delphora</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
     <style>
@@ -570,6 +571,28 @@
             0%, 100% { opacity: 0.4; transform: scale(0.98); }
             50% { opacity: 1; transform: scale(1.02); text-shadow: 0 0 30px rgba(100, 200, 255, 0.9); }
         }
+        
+        /* ---- ML Tutorial Overlay ---- */
+        #tutorial-overlay {
+            position: absolute; inset: 0; z-index: 60;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+            transition: opacity 0.5s ease;
+        }
+        #tutorial-overlay.hidden { opacity: 0; pointer-events: none; }
+        .tut-box {
+            background: linear-gradient(135deg, rgba(20,40,60,0.95), rgba(10,20,35,0.95));
+            border: 1px solid rgba(100,200,255,0.3);
+            border-radius: 12px; padding: 40px; text-align: center;
+            max-width: 500px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .tut-box h2 { font-family: var(--font-display); font-size: 2rem; color: #00FF88; margin-bottom: 15px; }
+        .tut-box p { font-size: 1.1rem; color: #ccc; margin-bottom: 25px; line-height: 1.5; }
+        #tut-gesture-icon { font-size: 5rem; margin-bottom: 20px; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .tut-progress-container { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+        #tut-progress-bar { height: 100%; width: 0%; background: #00FF88; transition: width 0.2s ease; }
+        #tut-status { font-size: 1rem; color: #00FF88; font-weight: bold; margin-bottom: 20px; }
+        #tut-timeout { font-size: 0.85rem; color: #888; }
     
         /* ══ DUAL-SCREEN MODE CSS ══
            Tab 1 (control): Camera full-screen + logo + gesture
@@ -651,6 +674,10 @@
     <script src="../node_modules/@mediapipe/camera_utils/camera_utils.js"></script>
     <script src="../node_modules/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script src="../node_modules/@mediapipe/hands/hands.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="ml_gesture.js"></script>
+    <script src="renderer.js"></script>
 </head>
 
 <body>
@@ -664,6 +691,18 @@
 
     <!-- THREE.js canvas -->
     <div id="canvas-container"></div>
+
+    <!-- Tutorial Overlay -->
+    <div id="tutorial-overlay" class="hidden">
+        <div class="tut-box">
+            <h2 id="tut-title">Cá nhân hóa AI</h2>
+            <p id="tut-desc">Vui lòng làm theo hướng dẫn để AI học thói quen tay của bạn.</p>
+            <div id="tut-gesture-icon">🖐</div>
+            <div class="tut-progress-container"><div id="tut-progress-bar"></div></div>
+            <div id="tut-status">Đang lấy mẫu... (0/10)</div>
+            <div id="tut-timeout">Hệ thống tự động bỏ qua nếu không nhận diện được (10s)</div>
+        </div>
+    </div>
 
     <!-- Idle Attract Mode Overlay -->
     <div id="idle-overlay">

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>HoloLearn - Proof of Feasibility (ML Calibration)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <style>
+        body { font-family: sans-serif; background: #111; color: #fff; padding: 20px; }
+        video, canvas { border: 2px solid #333; border-radius: 8px; width: 640px; height: 480px; transform: scaleX(-1); }
+        .container { display: flex; gap: 20px; }
+        .controls { flex: 1; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #0078D7; color: white; border: none; border-radius: 4px; font-weight: bold; }
+        button:hover { background: #005A9E; }
+        .status { margin-top: 20px; padding: 15px; background: #222; border-radius: 4px; }
+        .pred-box { display: flex; gap: 20px; margin-top: 20px; }
+        .pred-card { flex: 1; padding: 15px; background: #333; border-radius: 8px; text-align: center; }
+        .pred-card h3 { margin: 0 0 10px 0; color: #00FF88; }
+        .pred-val { font-size: 24px; font-weight: bold; }
+        .data-count { font-size: 14px; color: #aaa; }
+    </style>
+</head>
+<body>
+    <h1>Milestone 1: KNN/MLP Proof of Feasibility</h1>
+    <div class="container">
+        <div>
+            <video id="video" autoplay playsinline style="display:none;"></video>
+            <canvas id="canvas" width="640" height="480"></canvas>
+        </div>
+        <div class="controls">
+            <h3>1. Thu thập dữ liệu (Calibration)</h3>
+            <p>Đưa tay vào camera và bấm nút để lưu mẫu tọa độ tay (mỗi loại cần ~10 mẫu).</p>
+            <button onclick="recordSample(0)">👊 Thu mẫu NẮM TAY (0 ngón)</button>
+            <span class="data-count" id="count-0">0 mẫu</span><br>
+            
+            <button onclick="recordSample(5)">🖐 Thu mẫu XÒE TAY (5 ngón)</button>
+            <span class="data-count" id="count-5">0 mẫu</span><br>
+            
+            <button onclick="recordSample(2)">✌️ Thu mẫu CHỤM 2 NGÓN (Pinch)</button>
+            <span class="data-count" id="count-2">0 mẫu</span><br>
+            
+            <button onclick="resetData()" style="background:#d73a49;">Xóa toàn bộ dữ liệu</button>
+
+            <h3>2. Huấn luyện Mô hình (MLP Neural Net)</h3>
+            <button onclick="trainModel()" style="background:#28a745;">🚀 Huấn luyện nhanh (Few-shot)</button>
+            <div id="train-status" style="margin-top:10px; color:#ffdd57;">Chưa huấn luyện</div>
+
+            <h3>3. Đánh giá (Realtime)</h3>
+            <div class="pred-box">
+                <div class="pred-card">
+                    <h3>Rule-based (Cũ)</h3>
+                    <div class="pred-val" id="pred-rule">-</div>
+                </div>
+                <div class="pred-card">
+                    <h3>ML Personalized (Mới)</h3>
+                    <div class="pred-val" id="pred-ml">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="../node_modules/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="../node_modules/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="../node_modules/@mediapipe/hands/hands.js"></script>
+    <script src="pof.js"></script>
+</body>
+</html>

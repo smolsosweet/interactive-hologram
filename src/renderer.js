@@ -408,6 +408,7 @@ focusSpinner.add(centerDot);
 window.addEventListener('DOMContentLoaded', () => {
     const overlay = document.getElementById('debug-overlay');
     if (overlay) overlay.style.display = 'block';
+    if (typeof window.initMLTutorial === 'function') window.initMLTutorial();
 });
 setTimeout(() => {
     const overlay = document.getElementById('debug-overlay');
@@ -1059,6 +1060,24 @@ function updateOrbits(delta) {
 // ============================================================
 // 10. GESTURE SYSTEM
 // ============================================================
+function checkFist(lm) {
+    if (!lm) return false;
+    if (typeof window.predictMLGestureSync === 'function') {
+        let pred = window.predictMLGestureSync(lm);
+        if (pred !== "fallback") return pred === 0;
+    }
+    return countFingersAll(lm) === 0;
+}
+
+function checkPinch(lm) {
+    if (!lm) return false;
+    if (typeof window.predictMLGestureSync === 'function') {
+        let pred = window.predictMLGestureSync(lm);
+        if (pred !== "fallback") return pred === 2;
+    }
+    return countFingersAll(lm) > 0; // Fallback cũ: Miễn không phải nắm tay thì coi là Zoom
+}
+
 function isThumbExtended(lm) {
     return Math.hypot(lm[4].x - lm[5].x, lm[4].y - lm[5].y)
         > Math.hypot(lm[0].x - lm[9].x, lm[0].y - lm[9].y) * 0.55;
@@ -1155,6 +1174,16 @@ function onResults(results) {
             return;
         }
 
+        if (window.isMlCalibrating) {
+            if (results.multiHandLandmarks.length > 0) {
+                if (typeof window.processMLCalibration === 'function') {
+                    window.processMLCalibration(results.multiHandLandmarks[0]);
+                }
+            }
+            canvasCtx.restore();
+            return;
+        }
+
         for (const lm of results.multiHandLandmarks) {
             drawConnectors(canvasCtx, lm, HAND_CONNECTIONS, { color: '#00FF88', lineWidth: 2 });
             drawLandmarks(canvasCtx, lm, { color: '#FF4444', lineWidth: 1 });
@@ -1173,7 +1202,7 @@ function onResults(results) {
             rightHandLm = results.multiHandLandmarks[1];
         }
 
-        const isLeftFist = leftHandLm && countFingersAll(leftHandLm) === 0;
+        const isLeftFist = leftHandLm && checkFist(leftHandLm);
 
         // ══════════════════════════════════════════
         // MODE A: TWO HANDS — Left Fist modifier
@@ -1183,7 +1212,7 @@ function onResults(results) {
 
             const rightFingers = countFingersAll(rightHandLm);
 
-            if (rightFingers === 0) {
+            if (checkFist(rightHandLm)) {
                 // PAN MODE: 2 Fists
                 lastPinchDist = null;
                 const pPosRaw = { x: rightHandLm[9].x, y: rightHandLm[9].y };
@@ -1224,7 +1253,7 @@ function onResults(results) {
 
                 prevPanPos = { ...smoothedPanPos };
                 setGestureHUD('DI CHUYỂN (2 NẮM TAY)');
-            } else if (rightFingers > 0) {
+            } else if (checkPinch(rightHandLm)) {
                 // ZOOM MODE: Left Fist + Right Pinch
                 prevPanPos = null;
                 const tipIndex = rightHandLm[8];
@@ -1307,7 +1336,7 @@ function onResults(results) {
                 const fingers = getStableFingerCount(rawFingers);
                 const isRight = isRightHand(results.multiHandedness[0]);
 
-                if (fingers === 0) {
+                if (checkFist(lm)) {
                     // FIST — reset/exit
                     if (fingerBuf === 0) {
                         fingerHoldN++;
