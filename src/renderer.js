@@ -1333,28 +1333,33 @@ function onResults(results) {
                     }
                 } else {
                     // FINGERS — select planet
-                    const planetIdx = fingersToPlanetIdx(fingers, isRight);
-                    if (planetIdx >= 0 && planetIdx < 9) {
-                        const pName = PLANET_INFO[planetIdx]?.vi?.name;
-                        setGestureHUD(`TAY ${isRight ? 'PHẢI' : 'TRÁI'} - ${fingers} NGÓN (${pName})`);
+                    if (inPlanetFocus) {
+                        fingerBuf = -1; fingerHoldN = 0; setProgressHUD(0);
+                        setGestureHUD(''); // Trống HUD để giữ nền đen, tối ưu hiệu ứng 3D
+                    } else {
+                        const planetIdx = fingersToPlanetIdx(fingers, isRight);
+                        if (planetIdx >= 0 && planetIdx < 9) {
+                            const pName = PLANET_INFO[planetIdx]?.vi?.name;
+                            setGestureHUD(`TAY ${isRight ? 'PHẢI' : 'TRÁI'} - ${fingers} NGÓN (${pName})`);
 
-                        if (fingers === fingerBuf) {
-                            fingerHoldN++;
-                            setProgressHUD(fingerHoldN / HOLD_FRAMES);
-                            if (fingerHoldN === HOLD_FRAMES) {
-                                if (modelsPreloaded) {
-                                    enterPlanetFocus(planetIdx);
-                                } else {
-                                    setGestureHUD('ĐANG TẢI MODEL...');
+                            if (fingers === fingerBuf) {
+                                fingerHoldN++;
+                                setProgressHUD(fingerHoldN / HOLD_FRAMES);
+                                if (fingerHoldN === HOLD_FRAMES) {
+                                    if (modelsPreloaded) {
+                                        enterPlanetFocus(planetIdx);
+                                    } else {
+                                        setGestureHUD('ĐANG TẢI MODEL...');
+                                    }
+                                    fingerHoldN = HOLD_FRAMES + 1; // prevent re-trigger
                                 }
-                                fingerHoldN = HOLD_FRAMES + 1; // prevent re-trigger
+                            } else {
+                                fingerBuf = fingers; fingerHoldN = 0; setProgressHUD(0);
                             }
                         } else {
-                            fingerBuf = fingers; fingerHoldN = 0; setProgressHUD(0);
+                            fingerBuf = -1; fingerHoldN = 0; setProgressHUD(0);
+                            setGestureHUD('SẴN SÀNG');
                         }
-                    } else {
-                        fingerBuf = -1; fingerHoldN = 0; setProgressHUD(0);
-                        setGestureHUD('SẴN SÀNG');
                     }
                 }
             }
@@ -1389,6 +1394,7 @@ let currentCameraStream = null;
 let cameraLoopFrame = null;
 let startupDeviceId = null; // deviceId của camera laptop (cái dùng lần đầu tiên)
 let deviceChangeTimer = null; // Debounce cho devicechange
+let currentProcessLoopId = 0; // Lock để chống kẹt vòng lặp (Orphaned Loop Leak)
 
 async function startSmartCamera() {
     try {
@@ -1473,8 +1479,14 @@ async function startSmartCamera() {
             console.warn('Ignored interrupted play():', playErr.message);
         }
 
+        currentProcessLoopId++;
+        const myLoopId = currentProcessLoopId;
+
         let lastVideoTime = -1;
         const processFrame = async () => {
+            // KILL ORPHANED LOOP
+            if (myLoopId !== currentProcessLoopId) return;
+
             if (videoElement.readyState >= 2 && videoElement.videoWidth > 0 && videoElement.currentTime !== lastVideoTime) {
                 lastVideoTime = videoElement.currentTime;
                 try {
@@ -1483,7 +1495,16 @@ async function startSmartCamera() {
                     console.warn("MediaPipe processing skipped frame:", e.message);
                 }
             }
-            cameraLoopFrame = requestAnimationFrame(processFrame);
+            
+            // Re-check lock after async wait
+            if (myLoopId === currentProcessLoopId) {
+                // Nhường 1 chút CPU cho event loop thở nếu máy quá tải
+                setTimeout(() => {
+                    if (myLoopId === currentProcessLoopId) {
+                        cameraLoopFrame = requestAnimationFrame(processFrame);
+                    }
+                }, 5);
+            }
         };
         processFrame();
 
