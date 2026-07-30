@@ -109,7 +109,7 @@ window.processMLCalibration = function(landmarks) {
     updateTutorialUI();
 
     if (currentSampleCount >= SAMPLES_NEEDED) {
-        clearTimeout(tutorialTimer);
+    // Removed timeout logic
         
         if (window.mlTutorialStep < 2) {
             startTutorialStep(window.mlTutorialStep + 1);
