@@ -12,7 +12,6 @@ window.isMlSamplingActive = false;
 
 // UI Elements
 let tutOverlay, tutTitle, tutDesc, tutIcon, tutProgressBar, tutStatus, tutTimeoutText;
-let tutorialTimer = null;
 let currentSampleCount = 0;
 const SAMPLES_NEEDED = 10;
 const TIMEOUT_MS = 10000;
@@ -43,17 +42,20 @@ function startTutorialStep(step) {
     updateTutorialUI();
     tutOverlay.classList.remove('hidden');
 
-    // Cài đặt Timeout (Fallback to Rule-based)
-    clearTimeout(tutorialTimer);
-    tutorialTimer = setTimeout(() => {
-        console.warn("[ML] Tutorial timeout! Fallback to rule-based.");
-        finishTutorial(true); // force fallback
-    }, TIMEOUT_MS);
+    // Không dùng timeout nữa để người dùng chủ động
+}
+
+window.skipTutorial = function() {
+    console.log("[ML] User skipped tutorial. Fallback to rule-based.");
+    finishTutorial(true);
 }
 
 window.startCurrentSample = function() {
     window.isMlSamplingActive = true;
-    document.getElementById('tut-start-btn').style.display = 'none';
+    const startBtn = document.getElementById('tut-start-btn');
+    const skipBtn = document.getElementById('tut-skip-btn');
+    if (startBtn) startBtn.style.display = 'none';
+    if (skipBtn) skipBtn.style.display = 'none';
     document.getElementById('tut-progress-container').style.display = 'block';
     document.getElementById('tut-status').style.display = 'block';
 }
@@ -77,10 +79,12 @@ function updateTutorialUI() {
     tutProgressBar.style.width = `${(currentSampleCount / SAMPLES_NEEDED) * 100}%`;
 
     const startBtn = document.getElementById('tut-start-btn');
+    const skipBtn = document.getElementById('tut-skip-btn');
     const progCont = document.getElementById('tut-progress-container');
     const tutStat = document.getElementById('tut-status');
     if (startBtn && progCont && tutStat) {
-        startBtn.style.display = 'inline-block';
+        startBtn.style.display = 'block';
+        if (skipBtn) skipBtn.style.display = 'block';
         progCont.style.display = 'none';
         tutStat.style.display = 'none';
     }
