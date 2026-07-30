@@ -13,8 +13,9 @@ window.isMlSamplingActive = false;
 // UI Elements
 let tutOverlay, tutTitle, tutDesc, tutIcon, tutProgressBar, tutStatus, tutTimeoutText;
 let currentSampleCount = 0;
+let tutorialTimer = null;
 const SAMPLES_NEEDED = 10;
-const TIMEOUT_MS = 10000;
+const TIMEOUT_MS = 15000;
 
 function initMLTutorial() {
     tutOverlay = document.getElementById('tutorial-overlay');
@@ -39,18 +40,24 @@ function startTutorialStep(step) {
     window.isMlCalibrating = true;
     window.isMlSamplingActive = false;
     currentSampleCount = 0;
-    updateTutorialUI();
-    tutOverlay.classList.remove('hidden');
-
-    // Không dùng timeout nữa để người dùng chủ động
+    // Auto-skip sau 15 giây nếu học sinh không thao tác
+    clearTimeout(tutorialTimer);
+    tutorialTimer = setTimeout(() => {
+        if (!window.isMlSamplingActive) {
+            console.warn("[ML] Auto-timeout triggered due to inactivity.");
+            window.skipTutorial();
+        }
+    }, TIMEOUT_MS);
 }
 
 window.skipTutorial = function() {
+    clearTimeout(tutorialTimer);
     console.log("[ML] User skipped tutorial. Fallback to rule-based.");
     finishTutorial(true);
 }
 
 window.startCurrentSample = function() {
+    clearTimeout(tutorialTimer);
     window.isMlSamplingActive = true;
     const startBtn = document.getElementById('tut-start-btn');
     const skipBtn = document.getElementById('tut-skip-btn');
@@ -169,6 +176,7 @@ async function trainMLModel() {
 }
 
 function finishTutorial(fallback) {
+    clearTimeout(tutorialTimer);
     window.isMlCalibrating = false;
     window.mlTutorialStep = -1;
     if (fallback) {
