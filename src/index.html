@@ -697,8 +697,9 @@
             <h2 id="tut-title">Cá nhân hóa AI</h2>
             <p id="tut-desc">Vui lòng làm theo hướng dẫn để AI học thói quen tay của bạn.</p>
             <div id="tut-gesture-icon">🖐</div>
-            <div class="tut-progress-container"><div id="tut-progress-bar"></div></div>
-            <div id="tut-status">Đang lấy mẫu... (0/10)</div>
+            <button id="tut-start-btn" onclick="if(window.startCurrentSample) window.startCurrentSample()" style="padding: 10px 20px; font-size: 1.2rem; background: #00FF88; color: #000; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; font-weight: bold; box-shadow: 0 0 10px rgba(0,255,136,0.5);">Bắt đầu lấy mẫu</button>
+            <div class="tut-progress-container" id="tut-progress-container" style="display: none; margin-top: 15px;"><div id="tut-progress-bar"></div></div>
+            <div id="tut-status" style="display: none; margin-top: 5px;">Đang lấy mẫu... (0/10)</div>
             <div id="tut-timeout">Hệ thống tự động bỏ qua nếu không nhận diện được (10s)</div>
         </div>
     </div>

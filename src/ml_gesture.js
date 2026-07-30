@@ -8,6 +8,7 @@ window.isMlCalibrating = false;
 window.mlTutorialStep = -1; // -1: Done/Hidden, 0: Nắm tay, 1: Xòe tay, 2: Pinch
 window.mlSamples = { 0: [], 2: [], 5: [] }; 
 window.useFallbackRuleBased = false;
+window.isMlSamplingActive = false;
 
 // UI Elements
 let tutOverlay, tutTitle, tutDesc, tutIcon, tutProgressBar, tutStatus, tutTimeoutText;
@@ -37,6 +38,7 @@ function initMLTutorial() {
 function startTutorialStep(step) {
     window.mlTutorialStep = step;
     window.isMlCalibrating = true;
+    window.isMlSamplingActive = false;
     currentSampleCount = 0;
     updateTutorialUI();
     tutOverlay.classList.remove('hidden');
@@ -47,6 +49,13 @@ function startTutorialStep(step) {
         console.warn("[ML] Tutorial timeout! Fallback to rule-based.");
         finishTutorial(true); // force fallback
     }, TIMEOUT_MS);
+}
+
+window.startCurrentSample = function() {
+    window.isMlSamplingActive = true;
+    document.getElementById('tut-start-btn').style.display = 'none';
+    document.getElementById('tut-progress-container').style.display = 'block';
+    document.getElementById('tut-status').style.display = 'block';
 }
 
 function updateTutorialUI() {
@@ -66,11 +75,20 @@ function updateTutorialUI() {
     
     tutStatus.textContent = `Đang lấy mẫu... (${currentSampleCount}/${SAMPLES_NEEDED})`;
     tutProgressBar.style.width = `${(currentSampleCount / SAMPLES_NEEDED) * 100}%`;
+
+    const startBtn = document.getElementById('tut-start-btn');
+    const progCont = document.getElementById('tut-progress-container');
+    const tutStat = document.getElementById('tut-status');
+    if (startBtn && progCont && tutStat) {
+        startBtn.style.display = 'inline-block';
+        progCont.style.display = 'none';
+        tutStat.style.display = 'none';
+    }
 }
 
 // Hàm này được gọi từ renderer.js mỗi frame khi isMlCalibrating = true
 window.processMLCalibration = function(landmarks) {
-    if (!window.isMlCalibrating || window.mlTutorialStep < 0) return;
+    if (!window.isMlCalibrating || window.mlTutorialStep < 0 || !window.isMlSamplingActive) return;
 
     const features = extractFeatures(landmarks);
     if (!features) return;
