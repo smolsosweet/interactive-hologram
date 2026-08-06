@@ -50,7 +50,8 @@
     "@mediapipe/drawing_utils": "^0.3.1675466124",
     "@mediapipe/hands": "^0.4.1675469240",
     "electron-updater": "^6.8.9",
-    "three": "^0.184.0"
+    "openvino-node": "^2026.2.1",
+    "three": "^0.136.0"
   },
   "devDependencies": {
     "electron": "^28.3.3",

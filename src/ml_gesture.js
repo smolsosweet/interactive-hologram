@@ -40,6 +40,10 @@ function startTutorialStep(step) {
     window.isMlCalibrating = true;
     window.isMlSamplingActive = false;
     currentSampleCount = 0;
+    
+    if (tutOverlay) tutOverlay.classList.remove('hidden');
+    updateTutorialUI();
+    
     // Auto-skip sau 15 giây nếu học sinh không thao tác
     clearTimeout(tutorialTimer);
     tutorialTimer = setTimeout(() => {
@@ -98,10 +102,11 @@ function updateTutorialUI() {
 }
 
 // Hàm này được gọi từ renderer.js mỗi frame khi isMlCalibrating = true
-window.processMLCalibration = function(landmarks) {
-    if (!window.isMlCalibrating || window.mlTutorialStep < 0 || !window.isMlSamplingActive) return;
-
-    const features = extractFeatures(landmarks);
+window.processMLCalibration = function(landmarks, isRight) {
+    if (!window.isMlCalibrating || window.mlTutorialStep < 0 || window.mlTutorialStep > 2 || !window.isMlSamplingActive) return;
+    
+    const label = [0, 2, 5][window.mlTutorialStep];
+    const features = extractFeatures(landmarks, isRight);
     if (!features) return;
 
     let targetLabel = 0;
@@ -116,7 +121,7 @@ window.processMLCalibration = function(landmarks) {
     updateTutorialUI();
 
     if (currentSampleCount >= SAMPLES_NEEDED) {
-    // Removed timeout logic
+        window.isMlSamplingActive = false; // Ngăn chặn việc gọi nhiều lần
         
         if (window.mlTutorialStep < 2) {
             startTutorialStep(window.mlTutorialStep + 1);
@@ -137,14 +142,40 @@ async function trainMLModel() {
         const inputs = [];
         const labels = [];
         
+        // Data Augmentation: Rotate features around Z axis by a given angle (in degrees)
+        const augmentFeature = (feat, angleDeg) => {
+            const rad = angleDeg * Math.PI / 180;
+            const cosA = Math.cos(rad);
+            const sinA = Math.sin(rad);
+            const newFeat = new Array(63);
+            for (let i = 0; i < 21; i++) {
+                const x = feat[i * 3];
+                const y = feat[i * 3 + 1];
+                const z = feat[i * 3 + 2];
+                newFeat[i * 3] = x * cosA - y * sinA;
+                newFeat[i * 3 + 1] = x * sinA + y * cosA;
+                newFeat[i * 3 + 2] = z;
+            }
+            return newFeat;
+        };
+
         for (const label of [0, 2, 5]) {
             for (const feat of window.mlSamples[label]) {
-                inputs.push(feat);
                 let oneHot = [0, 0, 0];
                 if (label === 0) oneHot[0] = 1;
                 else if (label === 2) oneHot[1] = 1;
                 else if (label === 5) oneHot[2] = 1;
+
+                // Original
+                inputs.push(feat);
                 labels.push(oneHot);
+
+                // Augmented: ±10°, ±20°
+                const angles = [-20, -10, 10, 20];
+                for (const a of angles) {
+                    inputs.push(augmentFeature(feat, a));
+                    labels.push(oneHot);
+                }
             }
         }
 
@@ -163,15 +194,139 @@ async function trainMLModel() {
         });
 
         await window.mlModel.fit(xs, ys, { epochs: 40, batchSize: 16 });
-
         xs.dispose();
         ys.dispose();
+        console.log("[ML] Training complete.");
 
+        // Run Stress Test automatically after training
+        runStressTest();
         console.log("[ML] Training completed successfully!");
         finishTutorial(false);
     } catch (e) {
-        console.error("[ML] Training failed:", e);
+        console.error("[ML] Error during training:", e);
         finishTutorial(true);
+    }
+}
+
+async function runStressTest() {
+    console.log("[ML] Starting Overfitting Stress Test (±20° variation)...");
+    let totalSamples = 0;
+    let correctPredictions = 0;
+
+    const augmentFeature = (feat, angleDeg) => {
+        const rad = angleDeg * Math.PI / 180;
+        const cosA = Math.cos(rad);
+        const sinA = Math.sin(rad);
+        const newFeat = new Array(63);
+        for (let i = 0; i < 21; i++) {
+            const x = feat[i * 3];
+            const y = feat[i * 3 + 1];
+            const z = feat[i * 3 + 2];
+            newFeat[i * 3] = x * cosA - y * sinA;
+            newFeat[i * 3 + 1] = x * sinA + y * cosA;
+            newFeat[i * 3 + 2] = z;
+        }
+        return newFeat;
+    };
+
+    const anglesToTest = [-20, -15, 15, 20];
+    const testInputs = [];
+    const expectedLabels = [];
+
+    for (const label of [0, 2, 5]) {
+        for (const feat of window.mlSamples[label]) {
+            for (const a of anglesToTest) {
+                testInputs.push(augmentFeature(feat, a));
+                expectedLabels.push(label);
+            }
+        }
+    }
+
+    totalSamples = testInputs.length;
+    if (totalSamples === 0) return;
+
+    const xs = tf.tensor2d(testInputs);
+    const preds = window.mlModel.predict(xs);
+    const argMaxes = preds.argMax(-1).dataSync();
+
+    for (let i = 0; i < totalSamples; i++) {
+        let expected = expectedLabels[i];
+        let predictedRaw = argMaxes[i];
+        let predicted = -1;
+        if (predictedRaw === 0) predicted = 0;
+        if (predictedRaw === 1) predicted = 2;
+        if (predictedRaw === 2) predicted = 5;
+
+        if (predicted === expected) {
+            correctPredictions++;
+        }
+    }
+
+    xs.dispose();
+    preds.dispose();
+
+    const finalAccuracy = (correctPredictions / totalSamples) * 100;
+    console.log(`[ML] Stress Test Results: ${correctPredictions}/${totalSamples} correct (${finalAccuracy.toFixed(1)}%)`);
+    
+    // Auto-Log to main process
+    if (typeof require !== 'undefined') {
+        const { ipcRenderer } = require('electron');
+        window.stressTestCount = (window.stressTestCount || 0) + 1;
+        ipcRenderer.send('log-stresstest', {
+            iteration: window.stressTestCount,
+            accuracy: finalAccuracy.toFixed(1)
+        });
+    }
+
+    if (finalAccuracy >= 90) {
+        console.log("[ML] Go/No-Go Check: PASSED! (Accuracy >= 90%)");
+        exportToOpenVINO();
+    } else {
+        console.warn("[ML] Go/No-Go Check: FAILED! (Accuracy < 90%)");
+    }
+}
+
+async function exportToOpenVINO() {
+    console.log("[ML] Exporting model to OpenVINO...");
+    if (typeof require === 'undefined') return;
+    const { ipcRenderer } = require('electron');
+    
+    // Model layers: Dense(32), Dense(16), Dense(3)
+    let totalLength = 0;
+    const weightsList = [];
+    for (const layer of window.mlModel.layers) {
+        const weights = layer.getWeights();
+        if (weights.length > 0) {
+            const transposedKernel = tf.tidy(() => tf.transpose(weights[0]));
+            const kernel = transposedKernel.dataSync();
+            transposedKernel.dispose();
+            
+            const bias = weights[1].dataSync();
+            totalLength += kernel.length + bias.length;
+            weightsList.push(kernel);
+            weightsList.push(bias);
+        }
+    }
+    
+    // Convert to Float32Array
+    const buffer = new Float32Array(totalLength);
+    let offset = 0;
+    for (const arr of weightsList) {
+        buffer.set(arr, offset);
+        offset += arr.length;
+    }
+    
+    const success = await ipcRenderer.invoke('ov-init', buffer.buffer);
+    if (success) {
+        console.log("[ML] OpenVINO model initialized on backend.");
+        window.useOpenVINO = true;
+        const hudEngine = document.getElementById('hud-engine');
+        if (hudEngine) {
+            hudEngine.textContent = "OpenVINO";
+            hudEngine.style.color = "#00c3ff";
+        }
+    } else {
+        console.error("[ML] Failed to initialize OpenVINO backend.");
     }
 }
 
@@ -187,17 +342,48 @@ function finishTutorial(fallback) {
     if (tutOverlay) tutOverlay.classList.add('hidden');
 }
 
-window.predictMLGestureSync = function(landmarks) {
-    if (window.useFallbackRuleBased || !window.mlModel) {
+window.predictMLGestureSync = function(landmarks, isRight) {
+    if (window.useFallbackRuleBased) {
         return "fallback";
     }
-    const features = extractFeatures(landmarks);
+    const features = extractFeatures(landmarks, isRight);
     if (!features) return "fallback";
     
+    if (window.useOpenVINO && typeof require !== 'undefined') {
+        const { ipcRenderer } = require('electron');
+        const startTime = performance.now();
+        const probs = ipcRenderer.sendSync('ov-infer-sync', features);
+        console.log("[ML-OV] probs:", probs);
+        
+        window.mlLatency = (performance.now() - startTime).toFixed(1);
+        const hudLatency = document.getElementById('hud-latency');
+        if (hudLatency) hudLatency.textContent = window.mlLatency + " ms";
+        
+        if (probs) {
+            // Find argmax
+            let maxProb = -1;
+            let maxIdx = -1;
+            for (let i = 0; i < probs.length; i++) {
+                if (probs[i] > maxProb) { maxProb = probs[i]; maxIdx = i; }
+            }
+            if (maxIdx === 0) return 0;
+            if (maxIdx === 1) return 2;
+            if (maxIdx === 2) return 5;
+            return "fallback";
+        }
+    }
+
+    if (!window.mlModel) return "fallback";
+
     return tf.tidy(() => {
+        const startTime = performance.now();
         const inputTensor = tf.tensor2d([features]);
         const prediction = window.mlModel.predict(inputTensor);
         const argMax = prediction.argMax(-1).dataSync()[0];
+        
+        window.mlLatency = (performance.now() - startTime).toFixed(1);
+        const hudLatency = document.getElementById('hud-latency');
+        if (hudLatency) hudLatency.textContent = window.mlLatency + " ms";
         
         if (argMax === 0) return 0;
         if (argMax === 1) return 2;
@@ -206,11 +392,13 @@ window.predictMLGestureSync = function(landmarks) {
     });
 };
 
-function extractFeatures(landmarks) {
-    if (!landmarks || landmarks.length < 21) return null;
+function extractFeatures(landmarks, isRight) {
+    if (!landmarks || landmarks.length !== 21) return null;
+
+    // Center at wrist
     const wrist = landmarks[0];
     let normalized = landmarks.map(lm => ({
-        x: lm.x - wrist.x,
+        x: (lm.x - wrist.x) * (isRight === false ? -1 : 1), // Phản chiếu tay trái thành tay phải
         y: lm.y - wrist.y,
         z: lm.z - wrist.z
     }));

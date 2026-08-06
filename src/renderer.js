@@ -1,5 +1,5 @@
-import * as THREE from 'https://cdn.skypack.dev/three@0.132.2';
-import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.132.2/examples/jsm/loaders/GLTFLoader.js';
+import * as THREE from './vendor/three.module.js';
+import { GLTFLoader } from './vendor/GLTFLoader.js';
 
 let path = null;
 let ipcRenderer = null;
@@ -9,25 +9,30 @@ if (typeof require !== 'undefined') {
 }
 
 const urlParams = new URLSearchParams(window.location.search);
-const APP_MODE = urlParams.get('mode') || 'control';
-
-if (APP_MODE === 'hologram') {
-    document.body.classList.add('hologram-mode');
-} else if (APP_MODE === 'control') {
-    document.body.classList.add('control-mode');
-    
-    // Automatically show camera in control mode
-    setTimeout(() => {
-        const camBtn = document.getElementById('cam-toggle-btn');
-        if (camBtn && (!document.querySelector('canvas.output_canvas').style.display || document.querySelector('canvas.output_canvas').style.display === 'none')) {
-            camBtn.click();
-        }
-    }, 1000);
-}
+// Automatically show camera
+setTimeout(() => {
+    const camBtn = document.getElementById('cam-toggle-btn');
+    if (camBtn && (!document.querySelector('canvas.output_canvas').style.display || document.querySelector('canvas.output_canvas').style.display === 'none')) {
+        camBtn.click();
+    }
+}, 1000);
 
 // ============================================================
 // 1. SCENE & RENDERER SETUP
 // ============================================================
+// Benchmark & Analytics variables
+let frameCount = 0;
+let lastFpsTime = performance.now();
+
+// Global metrics for logging
+window.currentFPS = 0;
+window.currentRAM = 0;
+window.mlLatency = 0;
+
+let focusTimeSeconds = 0;
+let focusStartTime = 0;
+let lastAutoLogTime = performance.now(); // Auto-logger time
+window.learningStats = new Array(9).fill(0); // Time in seconds per planet
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
@@ -560,10 +565,8 @@ window.setAppLang = function(lang) {
         else if (lang === 'zh') idleText.textContent = '举手开始探索';
     }
     
-    if (APP_MODE === 'control') {
-        if (ipcRenderer) {
-            ipcRenderer.send('sync-action', { lang: lang });
-        }
+    if (ipcRenderer) {
+        ipcRenderer.send('sync-action', { lang: lang });
     }
     
     if (inPlanetFocus && focusIndex !== -1) {
@@ -724,7 +727,7 @@ function preloadPlanetModels() {
     const total = PLANET_MODEL_FILES.length;
 
     PLANET_MODEL_FILES.forEach((file, idx) => {
-        const modelPath = path.join(__dirname, '../models', file);
+        const modelPath = `../models/${file}`;
         loader.load(modelPath, (gltf) => {
             const root = gltf.scene;
 
@@ -846,6 +849,7 @@ function enterPlanetFocus(idx) {
         console.log(`  autoFocusPct:      (${currentAutoFocusPctX.toFixed(4)}, ${currentAutoFocusPctY.toFixed(4)})`);
         const W = threeRenderer.domElement.width, H = threeRenderer.domElement.height;
         console.log(`  Canvas:            ${W} x ${H} (DPR=${window.devicePixelRatio})`);
+        console.log(`  Latency:           ${window.mlLatency}ms`);
         console.log(`══════════════════════════════════\n`);
     }
 }
@@ -912,7 +916,7 @@ function switchPlanetModel(newIdx) {
 // ============================================================
 function loadSolarSystem() {
     const loader = new GLTFLoader();
-    const modelPath = typeof path !== 'undefined' && path ? path.join(__dirname, '../models', 'solar_system.glb') : '../models/solar_system.glb';
+    const modelPath = `../models/solar_system.glb`;
 
     loader.load(modelPath, (gltf) => {
         const root = gltf.scene;
@@ -1065,19 +1069,19 @@ function updateOrbits(delta) {
 // ============================================================
 // 10. GESTURE SYSTEM
 // ============================================================
-function checkFist(lm) {
+function checkFist(lm, isRight) {
     if (!lm) return false;
     if (typeof window.predictMLGestureSync === 'function') {
-        let pred = window.predictMLGestureSync(lm);
+        let pred = window.predictMLGestureSync(lm, isRight);
         if (pred !== "fallback") return pred === 0;
     }
     return countFingersAll(lm) === 0;
 }
 
-function checkPinch(lm) {
+function checkPinch(lm, isRight) {
     if (!lm) return false;
     if (typeof window.predictMLGestureSync === 'function') {
-        let pred = window.predictMLGestureSync(lm);
+        let pred = window.predictMLGestureSync(lm, isRight);
         if (pred !== "fallback") return pred === 2;
     }
     return countFingersAll(lm) > 0; // Fallback cũ: Miễn không phải nắm tay thì coi là Zoom
@@ -1182,7 +1186,8 @@ function onResults(results) {
         if (window.isMlCalibrating) {
             if (results.multiHandLandmarks.length > 0) {
                 if (typeof window.processMLCalibration === 'function') {
-                    window.processMLCalibration(results.multiHandLandmarks[0]);
+                    const isRight = isRightHand(results.multiHandedness[0]);
+                    window.processMLCalibration(results.multiHandLandmarks[0], isRight);
                 }
             }
             canvasCtx.restore();
@@ -1207,7 +1212,7 @@ function onResults(results) {
             rightHandLm = results.multiHandLandmarks[1];
         }
 
-        const isLeftFist = leftHandLm && checkFist(leftHandLm);
+        const isLeftFist = leftHandLm && checkFist(leftHandLm, false);
 
         // ══════════════════════════════════════════
         // MODE A: TWO HANDS — Left Fist modifier
@@ -1217,7 +1222,7 @@ function onResults(results) {
 
             const rightFingers = countFingersAll(rightHandLm);
 
-            if (checkFist(rightHandLm)) {
+            if (checkFist(rightHandLm, true)) {
                 // PAN MODE: 2 Fists
                 lastPinchDist = null;
                 const pPosRaw = { x: rightHandLm[9].x, y: rightHandLm[9].y };
@@ -1258,7 +1263,7 @@ function onResults(results) {
 
                 prevPanPos = { ...smoothedPanPos };
                 setGestureHUD('DI CHUYỂN (2 NẮM TAY)');
-            } else if (checkPinch(rightHandLm)) {
+            } else if (checkPinch(rightHandLm, true)) {
                 // ZOOM MODE: Left Fist + Right Pinch
                 prevPanPos = null;
                 const tipIndex = rightHandLm[8];
@@ -1283,8 +1288,13 @@ function onResults(results) {
                     setGestureHUD(`ZOOM x${(1 / targetOverviewZoomFactor).toFixed(1)}`);
                 }
             } else {
-
                 lastPinchDist = null; prevPanPos = null;
+                // Nếu đang cố tình thao tác bằng 2 tay nhưng tay phải không ra Fist/Pinch hợp lệ -> tính là lỗi
+                if (!window.lastErrorTime || Date.now() - window.lastErrorTime > 1500) {
+                    window.learningErrors = (window.learningErrors || 0) + 1;
+                    window.lastErrorTime = Date.now();
+                }
+                setGestureHUD('KHÔNG NHẬN DIỆN ĐƯỢC THAO TÁC');
             }
         }
         // ══════════════════════════════════════════
@@ -1341,7 +1351,7 @@ function onResults(results) {
                 const fingers = getStableFingerCount(rawFingers);
                 const isRight = isRightHand(results.multiHandedness[0]);
 
-                if (checkFist(lm)) {
+                if (checkFist(lm, isRight)) {
                     // FIST — reset/exit
                     if (fingerBuf === 0) {
                         fingerHoldN++;
@@ -1427,7 +1437,12 @@ function onResults(results) {
 // ============================================================
 // 12. MEDIAPIPE SETUP
 // ============================================================
-const hands = new Hands({ locateFile: f => path ? path.join(__dirname, '../node_modules/@mediapipe/hands', f) : '../node_modules/@mediapipe/hands/' + f });
+const hands = new Hands({ locateFile: (file) => {
+    if (typeof __dirname !== 'undefined' && typeof path !== 'undefined' && path) {
+        return path.join(__dirname, '..', 'node_modules', '@mediapipe', 'hands', file);
+    }
+    return `../node_modules/@mediapipe/hands/${file}`;
+} });
 hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.75, minTrackingConfidence: 0.75 });
 hands.onResults(onResults);
 let currentCameraStream = null;
@@ -1553,7 +1568,7 @@ async function startSmartCamera() {
         setGestureHUD(`❌ LỖI: ${err.name || err.message || "Không rõ"}`);
     }
 }
-if (APP_MODE === "control") startSmartCamera();
+startSmartCamera();
 
 // TỰ ĐỘNG LẮNG NGHE KHI CÓ NGƯỜI CẮM/RÚT CAMERA (HOT-PLUG) — CÓ DEBOUNCE
 navigator.mediaDevices.addEventListener('devicechange', () => {
@@ -1562,7 +1577,7 @@ navigator.mediaDevices.addEventListener('devicechange', () => {
     deviceChangeTimer = setTimeout(() => {
         console.log("🔄 Phát hiện cắm/rút USB Camera! Đang quét lại...");
         setGestureHUD("🔄 ĐANG QUÉT CAMERA MỚI...");
-        if (APP_MODE === "control") startSmartCamera();
+        startSmartCamera();
     }, 2000); // Đợi 2 giây cho Windows nhận diện driver hoàn tất
 });
 
@@ -1573,6 +1588,65 @@ const clock = new THREE.Clock();
 
 function animate() {
     requestAnimationFrame(animate);
+
+    // BENCHMARK HUD - FPS & Learning Analytics
+    frameCount++;
+    const now = performance.now();
+    if (now - lastFpsTime >= 1000) {
+        window.currentFPS = frameCount;
+        const hudFps = document.getElementById('hud-fps');
+        if (hudFps) hudFps.textContent = frameCount;
+        
+        // RAM (if in Electron Node context)
+        if (typeof process !== 'undefined') {
+            const mem = process.memoryUsage();
+            window.currentRAM = (mem.heapUsed / 1024 / 1024).toFixed(1);
+            const hudRam = document.getElementById('hud-ram');
+            if (hudRam) hudRam.textContent = window.currentRAM + ' MB';
+        }
+
+        // Learning Analytics (Focus Time)
+        if (inPlanetFocus && focusIndex >= 0) {
+            if (focusStartTime === 0) focusStartTime = now;
+            focusTimeSeconds = Math.floor((now - focusStartTime) / 1000);
+            window.learningStats[focusIndex] += 1; // Add 1 second
+        } else {
+            focusStartTime = 0;
+            focusTimeSeconds = 0;
+        }
+        const hudFocus = document.getElementById('hud-focus-time');
+        if (hudFocus) hudFocus.textContent = focusTimeSeconds + "s";
+        
+        frameCount = 0;
+        lastFpsTime = now;
+    }
+
+    // Auto-Log every 10 seconds
+    if (now - lastAutoLogTime >= 10000) {
+        if (typeof ipcRenderer !== 'undefined') {
+            const engineName = window.useOpenVINO ? 'OpenVINO' : 'TF.js';
+            const fpsText = window.currentFPS || 0;
+            const latencyText = window.mlLatency || 0;
+            const ramText = window.currentRAM || 0;
+            const networkState = navigator.onLine ? 'Online' : 'Offline';
+            const networkHud = document.getElementById('hud-network');
+            if (networkHud) {
+                networkHud.textContent = networkState;
+                networkHud.style.color = navigator.onLine ? '#0ff' : '#f00';
+            }
+            
+            ipcRenderer.send('log-benchmark', {
+                engine: engineName,
+                time: Math.floor((now - performance.timeOrigin)/1000),
+                fps: fpsText,
+                latency: latencyText,
+                ram: ramText,
+                network: networkState
+            });
+        }
+        lastAutoLogTime = now;
+    }
+
     const delta = Math.min(clock.getDelta(), 0.05);
     if (mixer) mixer.update(delta);
     updateOrbits(delta);
@@ -1708,26 +1782,6 @@ function animate() {
 
     // ── Render ──
     renderFrame();
-
-    if (APP_MODE === "control") {
-        if (ipcRenderer) ipcRenderer.send("sync-action", {
-            overviewQuat: [modelGroup.quaternion.x, modelGroup.quaternion.y, modelGroup.quaternion.z, modelGroup.quaternion.w],
-            focusQuat: [focusSpinner.quaternion.x, focusSpinner.quaternion.y, focusSpinner.quaternion.z, focusSpinner.quaternion.w],
-            inPlanetFocus: inPlanetFocus,
-            focusIndex: focusIndex,
-            transitionTarget: transitionTarget,
-            transitionProgress: transitionProgress,
-            lastInteractionTime: lastInteractionTime,
-            isIdleMode: false,
-            targetRotationY: typeof targetRotationY !== "undefined" ? targetRotationY : modelGroup.rotation.y,
-            targetRotationX: typeof targetRotationX !== "undefined" ? targetRotationX : modelGroup.rotation.x,
-            targetOverviewZoomFactor: targetOverviewZoomFactor,
-            targetFocusZoomFactor: targetFocusZoomFactor,
-            panTarget: [panTarget.x, panTarget.y, panTarget.z],
-            focusPanTarget: [focusPanTarget.x, focusPanTarget.y, focusPanTarget.z],
-            unflipText: window.unflipText
-        });
-    }
 }
 
 // ============================================================
@@ -1848,55 +1902,6 @@ window.addEventListener('resize', () => {
     if (solarSystemLoaded) autoFitCamera();
 });
 
-    if (ipcRenderer) ipcRenderer.on("sync-action", (e, data) => {
-        if (data.overviewQuat && !isNaN(data.overviewQuat[0])) modelGroup.quaternion.set(data.overviewQuat[0], data.overviewQuat[1], data.overviewQuat[2], data.overviewQuat[3]);
-        if (data.focusQuat && !isNaN(data.focusQuat[0])) focusSpinner.quaternion.set(data.focusQuat[0], data.focusQuat[1], data.focusQuat[2], data.focusQuat[3]);
-        if (typeof data.transitionTarget === "number" && !isNaN(data.transitionTarget)) transitionTarget = data.transitionTarget;
-        if (typeof data.transitionProgress === "number" && !isNaN(data.transitionProgress)) transitionProgress = data.transitionProgress;
-        lastInteractionTime = data.lastInteractionTime;
-        
-        if (typeof data.unflipText !== "undefined") {
-            window.unflipText = data.unflipText;
-            if (window.unflipText) {
-                document.body.classList.add('unflip-text');
-            } else {
-                document.body.classList.remove('unflip-text');
-            }
-        }
-        if (data.hotkey) {
-            window.executeHotkey(data.hotkey);
-        }
-        
-        if (data.lang) {
-            window.currentAppLang = data.lang;
-            if (inPlanetFocus && focusIndex !== -1) {
-                updatePlanetInfoPanel(focusIndex);
-            }
-        }
-        
-        if (typeof targetRotationY !== "undefined") targetRotationY = data.targetRotationY;
-        if (typeof targetRotationX !== "undefined") targetRotationX = data.targetRotationX;
-        
-        if (typeof data.targetOverviewZoomFactor === "number" && !isNaN(data.targetOverviewZoomFactor)) targetOverviewZoomFactor = data.targetOverviewZoomFactor;
-        if (typeof data.targetFocusZoomFactor === "number" && !isNaN(data.targetFocusZoomFactor)) targetFocusZoomFactor = data.targetFocusZoomFactor;
-        if (data.panTarget && !isNaN(data.panTarget[0])) panTarget.set(data.panTarget[0], data.panTarget[1], data.panTarget[2]);
-        if (data.focusPanTarget && !isNaN(data.focusPanTarget[0])) focusPanTarget.set(data.focusPanTarget[0], data.focusPanTarget[1], data.focusPanTarget[2]);
-        
-        if (typeof data.inPlanetFocus !== 'undefined' && typeof data.focusIndex !== 'undefined') {
-            if (data.inPlanetFocus !== inPlanetFocus || data.focusIndex !== focusIndex) {
-                inPlanetFocus = data.inPlanetFocus;
-                focusIndex = data.focusIndex;
-            
-            if (inPlanetFocus) {
-                setFocusModel(focusIndex);
-                showPlanetPanel(focusIndex);
-            } else {
-                clearFocusModel();
-                hidePlanetPanel();
-            }
-        }
-    }
-});
 
 // Global Hotkey Sync
 window.executeHotkey = function(key) {
@@ -1919,11 +1924,47 @@ window.executeHotkey = function(key) {
         } else {
             document.body.classList.remove('unflip-text');
         }
+    } else if (key === 'o') {
+        window.useOpenVINO = !window.useOpenVINO;
+        const hudEngine = document.getElementById('hud-engine');
+        if (hudEngine) {
+            hudEngine.textContent = window.useOpenVINO ? "OpenVINO" : "TF.js";
+        }
+        setGestureHUD(window.useOpenVINO ? "🚀 Chuyển sang OpenVINO" : "🔄 Chuyển sang TF.js");
+    } else if (key === 'l') {
+        if (typeof window.showLearningAnalytics === 'function') {
+            window.showLearningAnalytics();
+        }
     }
 }
 
 window.addEventListener('app-hotkey', (e) => {
     const key = e.detail;
     window.executeHotkey(key);
-    if (ipcRenderer) ipcRenderer.send('sync-action', { hotkey: key });
 });
+
+window.showLearningAnalytics = function() {
+    let report = "--- BÁO CÁO PHIÊN HỌC ---\n\n";
+    let total = 0;
+    for (let i = 0; i < 9; i++) {
+        const t = window.learningStats[i];
+        total += t;
+        if (t > 0) {
+            report += `${PLANET_INFO[i].emoji} ${PLANET_INFO[i].vi.name}: ${t} giây\n`;
+        }
+    }
+    report += `\nTổng thời gian tương tác: ${total} giây\n`;
+    
+    // Suggest favorite planet
+    if (total > 0) {
+        let maxIdx = 0;
+        for (let i = 1; i < 9; i++) {
+            if (window.learningStats[i] > window.learningStats[maxIdx]) maxIdx = i;
+        }
+        report += `🌟 Sở thích nổi bật: Khám phá ${PLANET_INFO[maxIdx].vi.name} nhiều nhất!`;
+    } else {
+        report += "Chưa có dữ liệu tương tác.";
+    }
+    
+    alert(report);
+};

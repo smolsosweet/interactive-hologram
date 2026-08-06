@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delphora</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+    <!-- TensorFlow.js (Local) -->
+    <script src="vendor/tf.min.js"></script>
+    
+    <!-- True Offline Edge AI: Sử dụng font hệ thống thay vì Google Fonts -->
+    <style>
+        body { font-family: 'Inter', 'Space Grotesk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
     <style>
         /* ---- Reset ---- */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -594,60 +598,15 @@
         #tut-status { font-size: 1rem; color: #00FF88; font-weight: bold; margin-bottom: 20px; }
         #tut-timeout { font-size: 0.85rem; color: #888; }
     
-        /* ══ DUAL-SCREEN MODE CSS ══
-           Tab 1 (control): Camera full-screen + logo + gesture
-           Tab 2 (hologram): Planets only + planet info (flipped) */
-
-        /* TAB 2 HOLOGRAM: Hide logo, gesture, buttons, camera, idle */
-        body.hologram-mode #hud-logos,
-        body.hologram-mode #hud-gesture-wrap,
-        body.hologram-mode #btn-container,
-        body.hologram-mode #loading-overlay,
-        body.hologram-mode #idle-overlay,
-        body.hologram-mode .input_video,
-        body.hologram-mode .output_canvas {
-            display: none !important;
-        }
-
-        /* TAB 1 CONTROL: Hide 3D planets, planet info, buttons, idle */
-        body.control-mode #canvas-container,
-        body.control-mode #planet-panel,
-        body.control-mode #btn-container,
-        body.control-mode #idle-overlay {
-            display: none !important;
-        }
-
-        /* Camera canvas full screen */
-        body.control-mode .output_canvas {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            z-index: 1 !important;
-            border: none !important;
-            border-radius: 0 !important;
-            background: #000 !important;
-            object-fit: cover !important;
-            transform: scaleX(-1) !important;
-        }
-
-        /* Logo and gesture HUD float above camera */
-        body.control-mode #hud-logos,
-        body.control-mode #hud-gesture-wrap {
-            z-index: 10 !important;
-        }
-
-        /* Language Switcher on Control Mode only */
+        /* Language Switcher */
         #lang-controls {
             position: fixed;
             top: 24px;
             right: 24px;
             z-index: 100;
-            display: none; /* Only show in control mode */
+            display: flex;
             gap: 10px;
         }
-        body.control-mode #lang-controls { display: flex; }
         
         .lang-btn {
             background: rgba(0, 5, 15, 0.7);
@@ -675,7 +634,7 @@
     <script src="../node_modules/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script src="../node_modules/@mediapipe/hands/hands.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="vendor/tf.min.js"></script>
     <script src="ml_gesture.js"></script>
 </head>
 
@@ -685,6 +644,7 @@
     <button class="lang-btn" onclick="setAppLang('en')">English</button>
     <button class="lang-btn" onclick="setAppLang('zh')">中文</button>
     <button class="lang-btn" id="btn-reset-ai" onclick="if(window.resetMLCalibration) window.resetMLCalibration()" style="background: rgba(255, 50, 50, 0.4); border-color: rgba(255, 100, 100, 0.5);">Reset Lớp</button>
+    <button class="lang-btn" id="btn-analytics" onclick="if(window.showLearningAnalytics) window.showLearningAnalytics()" style="background: rgba(50, 150, 255, 0.4); border-color: rgba(100, 150, 255, 0.5);">Báo cáo</button>
 </div>
 
 <div id="app-container">
@@ -789,7 +749,7 @@
 
     <!-- MediaPipe inputs -->
     <video class="input_video"></video>
-    <canvas class="output_canvas" style="display:none;"></canvas>
+    <canvas class="output_canvas"></canvas>
 
 </div>
 
@@ -810,13 +770,12 @@
     // Camera feed toggle
     const camBtn    = document.getElementById('cam-toggle-btn');
     const camCanvas = document.querySelector('canvas.output_canvas');
-    const isControlMode = new URLSearchParams(window.location.search).get("mode") === "control";
-    let camVisible = false;
+    let camVisible = true;
     
     if (camVisible) {
         camCanvas.style.display = 'block';
         camBtn.classList.add('cam-on');
-        camBtn.textContent = '🎥';
+        camBtn.textContent = '📸';
         camBtn.title = 'Tắt camera';
     }
 
@@ -835,8 +794,53 @@
         const key = e.key.toLowerCase();
         if (key === 'escape') {
             closeApp();
-        } else if (['t', 'c', 'h', 'v'].includes(key)) {
+        } else if (['t', 'c', 'h', 'v', 'o', 'l'].includes(key)) {
             window.dispatchEvent(new CustomEvent('app-hotkey', {detail: key}));
+        }
+    });
+
+    // Make camera draggable
+    let isDragging = false;
+    let dragStartX, dragStartY;
+    let initialRight, initialBottom;
+
+    camCanvas.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        
+        const rect = camCanvas.getBoundingClientRect();
+        initialRight = window.innerWidth - rect.right;
+        initialBottom = window.innerHeight - rect.bottom;
+        
+        camCanvas.style.transition = 'none';
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        const deltaX = dragStartX - e.clientX;
+        const deltaY = dragStartY - e.clientY;
+        
+        let newRight = initialRight + deltaX;
+        let newBottom = initialBottom + deltaY;
+        
+        const maxRight = window.innerWidth - camCanvas.offsetWidth;
+        const maxBottom = window.innerHeight - camCanvas.offsetHeight;
+        
+        newRight = Math.max(0, Math.min(newRight, maxRight));
+        newBottom = Math.max(0, Math.min(newBottom, maxBottom));
+        
+        camCanvas.style.right = `${newRight}px`;
+        camCanvas.style.bottom = `${newBottom}px`;
+        camCanvas.style.left = 'auto';
+        camCanvas.style.top = 'auto';
+    });
+
+    window.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            camCanvas.style.transition = 'width 0.3s, height 0.3s';
         }
     });
 </script>
