@@ -624,18 +624,109 @@
         }
         #tutorial-overlay.hidden { opacity: 0; pointer-events: none; }
         .tut-box {
-            background: linear-gradient(135deg, rgba(20,40,60,0.95), rgba(10,20,35,0.95));
-            border: 1px solid rgba(100,200,255,0.3);
-            border-radius: 12px; padding: 40px; text-align: center;
-            max-width: 500px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            background: rgba(10, 15, 30, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            border-radius: 20px; 
+            padding: 40px 30px; 
+            text-align: center;
+            width: 400px;
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(100, 200, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            margin-right: auto;
         }
-        .tut-box h2 { font-family: var(--font-display); font-size: 2rem; color: #00FF88; margin-bottom: 15px; }
-        .tut-box p { font-size: 1.1rem; color: #ccc; margin-bottom: 25px; line-height: 1.5; }
-        #tut-gesture-icon { font-size: 5rem; margin-bottom: 20px; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
-        .tut-progress-container { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
-        #tut-progress-bar { height: 100%; width: 0%; background: #00FF88; transition: width 0.2s ease; }
-        #tut-status { font-size: 1rem; color: #00FF88; font-weight: bold; margin-bottom: 20px; }
-        #tut-timeout { font-size: 0.85rem; color: #888; }
+        .tut-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, transparent, #00d2ff, #3a7bd5, transparent);
+        }
+        .tut-box h2 { 
+            font-family: var(--font-display); 
+            font-size: 1.8rem; 
+            color: #64c8ff; 
+            margin-bottom: 10px; 
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .tut-box p { 
+            font-size: 1.05rem; 
+            color: rgba(255,255,255,0.7); 
+            margin-bottom: 0; 
+            line-height: 1.5; 
+            min-height: 3.2rem;
+        }
+        #tut-gesture-icon { 
+            font-size: 6rem; 
+            margin: 10px 0; 
+            text-shadow: 0 0 40px rgba(100,200,255,0.4); 
+            animation: floatIcon 3s ease-in-out infinite;
+        }
+        @keyframes floatIcon {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .tut-progress-container { 
+            width: 100%; height: 6px; 
+            background: rgba(255,255,255,0.05); 
+            border-radius: 3px; overflow: hidden; 
+            margin-bottom: 10px; 
+            border: 1px solid rgba(100,200,255,0.1);
+        }
+        #tut-progress-bar { 
+            height: 100%; width: 0%; 
+            background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%); 
+            transition: width 0.2s ease; 
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+        }
+        #tut-status { 
+            font-size: 0.95rem; 
+            color: #64c8ff; 
+            font-weight: 500; 
+            margin-bottom: 5px; 
+            letter-spacing: 0.05em;
+        }
+        #tut-timeout { 
+            font-size: 0.85rem; 
+            color: rgba(255,255,255,0.3); 
+            margin-top: 15px;
+        }
+        /* Buttons inside tut-box */
+        .tut-actions {
+            display: flex; gap: 12px; justify-content: center; width: 100%;
+        }
+        .tut-btn-primary {
+            flex: 1;
+            padding: 12px 0; font-size: 1.1rem; 
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5); 
+            color: #fff; border: none; border-radius: 8px; 
+            cursor: pointer; font-weight: 600; 
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .tut-btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        .tut-btn-secondary {
+            padding: 12px 20px; font-size: 1rem; 
+            background: rgba(255,255,255,0.05); 
+            color: rgba(255,255,255,0.8); 
+            border: 1px solid rgba(255,255,255,0.2); 
+            border-radius: 8px; cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .tut-btn-secondary:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
     
         /* Language Switcher */
         #lang-controls {
@@ -800,16 +891,28 @@
     <!-- Tutorial Overlay -->
     <div id="tutorial-overlay" class="hidden">
         <div class="tut-box">
-            <h2 id="tut-title">Cá nhân hóa AI</h2>
-            <p id="tut-desc">Vui lòng làm theo hướng dẫn để AI học thói quen tay của bạn.</p>
-            <div id="tut-gesture-icon">🖐</div>
-            <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
-                <button id="tut-start-btn" onclick="if(window.startCurrentSample) window.startCurrentSample()" style="padding: 10px 20px; font-size: 1.2rem; background: #00FF88; color: #000; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; box-shadow: 0 0 10px rgba(0,255,136,0.5);">Bắt đầu lấy mẫu</button>
-                <button id="tut-skip-btn" onclick="if(window.skipTutorial) window.skipTutorial()" style="padding: 10px 20px; font-size: 1rem; background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.5); border-radius: 8px; cursor: pointer;">Bỏ qua</button>
+            <div style="width: 100%">
+                <h2 id="tut-title">Cá nhân hóa AI</h2>
+                <p id="tut-desc">Vui lòng làm theo hướng dẫn để AI học thói quen tay của bạn.</p>
             </div>
-            <div class="tut-progress-container" id="tut-progress-container" style="display: none; margin-top: 15px;"><div id="tut-progress-bar"></div></div>
-            <div id="tut-status" style="display: none; margin-top: 5px;">Đang lấy mẫu... (0/10)</div>
-            <div id="tut-timeout">Bạn có thể Bỏ qua nếu muốn dùng thuật toán mặc định.</div>
+            
+            <div id="tut-gesture-icon">🚀</div>
+            
+            <div style="width: 100%">
+                <div class="tut-actions" id="tut-action-buttons">
+                    <button id="tut-start-btn" class="tut-btn-primary" onclick="if(window.startCurrentSample) window.startCurrentSample()">Bắt đầu lấy mẫu</button>
+                    <button id="tut-skip-btn" class="tut-btn-secondary" onclick="if(window.skipTutorial) window.skipTutorial()">Bỏ qua</button>
+                </div>
+                
+                <div id="tut-progress-wrapper" style="margin-top: 10px;">
+                    <div class="tut-progress-container" id="tut-progress-container" style="display: none;">
+                        <div id="tut-progress-bar"></div>
+                    </div>
+                    <div id="tut-status" style="display: none;">Đang lấy mẫu... (0/10)</div>
+                </div>
+                
+                <div id="tut-timeout">Bạn có thể Bỏ qua nếu muốn dùng thuật toán mặc định.</div>
+            </div>
         </div>
     </div>
 
