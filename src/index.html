@@ -344,21 +344,16 @@
             top: 85px;
             left: 24px;
             z-index: 30;
-            background: rgba(0, 255, 136, 0.15);
-            border: 1px solid rgba(0, 255, 136, 0.4);
-            color: #00ff88;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
+            color: rgba(100, 200, 255, 0.5);
+            font-size: 0.8rem;
             display: flex;
             align-items: center;
             gap: 6px;
-            backdrop-filter: blur(4px);
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
             pointer-events: none;
-            transition: all 0.3s ease;
+            letter-spacing: 0.05em;
         }
+        #privacy-badge span { font-size: 0.9rem; opacity: 0.8; }
+        
         body.panel-active #privacy-badge {
             transform: scale(0.8);
             transform-origin: top left;
@@ -464,13 +459,24 @@
         video.input_video { display: none; }
 
         .output_canvas {
-            position: absolute; right: 20px; top: 120px;
+            position: absolute; right: 20px; bottom: 20px; top: auto;
             width: 320px; height: 240px;
             z-index: 10;
             transform: scaleX(-1);
             border-radius: 8px;
             border: 2px solid rgba(100, 200, 255, 0.4);
             transition: all 0.5s ease;
+        }
+        body.ml-calibrating .output_canvas {
+            right: 50%;
+            top: 50%;
+            bottom: auto;
+            transform: translate(50%, -50%) scaleX(-1);
+            width: 480px;
+            height: 360px;
+            z-index: 100;
+            border-width: 4px;
+            box-shadow: 0 0 40px rgba(100,200,255,0.4);
         }
         body.in-focus canvas.output_canvas {
             right: auto;
@@ -609,6 +615,10 @@
             background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
             transition: opacity 0.5s ease;
         }
+        body.ml-calibrating #tutorial-overlay {
+            justify-content: flex-start;
+            padding-top: 5vh;
+        }
         #tutorial-overlay.hidden { opacity: 0; pointer-events: none; }
         .tut-box {
             background: linear-gradient(135deg, rgba(20,40,60,0.95), rgba(10,20,35,0.95));
@@ -631,27 +641,131 @@
             right: 24px;
             z-index: 100;
             display: flex;
-            gap: 10px;
+            gap: 12px;
+            align-items: center;
         }
         
-        .lang-btn {
-            background: rgba(0, 5, 15, 0.7);
+        #lang-select {
+            appearance: none;
+            background: rgba(0, 5, 15, 0.4);
             border: 1px solid rgba(100, 200, 255, 0.2);
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 8px 32px 8px 16px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            outline: none;
+            transition: all 0.2s;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364c8ff%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+        }
+        #lang-select:hover, #lang-select:focus {
+            border-color: rgba(100, 200, 255, 0.5);
+            background-color: rgba(0, 5, 15, 0.7);
+        }
+        #lang-select option {
+            background: #00050f;
+            color: #fff;
+        }
+        
+        .minimal-btn {
+            background: rgba(100, 200, 255, 0.05);
+            border: 1px solid rgba(100, 200, 255, 0.15);
+            color: rgba(255, 255, 255, 0.8);
             padding: 8px 16px;
-            border-radius: 20px;
+            border-radius: 6px;
             cursor: pointer;
             font-family: inherit;
-            font-weight: 500;
-            transition: all 0.3s;
+            font-size: 0.9rem;
+            transition: all 0.2s;
             backdrop-filter: blur(5px);
         }
-        .lang-btn:hover { background: rgba(100, 200, 255, 0.2); }
-        .lang-btn.active {
-            background: rgba(100, 200, 255, 0.4);
+        .minimal-btn:hover {
+            background: rgba(100, 200, 255, 0.15);
             color: #fff;
-            border-color: #64c8ff;
-            box-shadow: 0 0 10px rgba(100, 200, 255, 0.3);
+            border-color: rgba(100, 200, 255, 0.3);
+        }
+        .minimal-btn.reset-btn:hover {
+            background: rgba(255, 50, 50, 0.15);
+            border-color: rgba(255, 50, 50, 0.3);
+            color: #ff6b6b;
+        }
+        
+        /* ---- Analytics Modal ---- */
+        #analytics-modal {
+            position: absolute; inset: 0; z-index: 200;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0, 2, 10, 0.7);
+            backdrop-filter: blur(12px);
+            transition: opacity 0.3s ease;
+        }
+        #analytics-modal.hidden { opacity: 0; pointer-events: none; }
+        
+        .analytics-box {
+            background: linear-gradient(145deg, rgba(15, 25, 40, 0.9), rgba(5, 10, 20, 0.95));
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            border-radius: 12px;
+            width: 480px;
+            max-width: 90vw;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        .analytics-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(100, 200, 255, 0.1);
+        }
+        .analytics-header h2 {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #fff;
+            letter-spacing: 0.05em;
+        }
+        .analytics-close {
+            background: transparent; border: none;
+            color: rgba(255,255,255,0.5); font-size: 1.5rem; cursor: pointer;
+            transition: color 0.2s;
+        }
+        .analytics-close:hover { color: #fff; }
+        
+        .analytics-content {
+            padding: 24px;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+        .analytics-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px dashed rgba(255,255,255,0.05);
+        }
+        .analytics-item:last-child { border-bottom: none; }
+        
+        .analytics-item-name {
+            display: flex; align-items: center; gap: 12px;
+            color: rgba(255,255,255,0.8);
+            font-size: 1rem;
+        }
+        .analytics-item-value {
+            color: #64c8ff;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .analytics-footer {
+            padding: 20px 24px;
+            background: rgba(100, 200, 255, 0.03);
+            border-top: 1px solid rgba(100, 200, 255, 0.1);
+            color: rgba(255,255,255,0.6);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .analytics-highlight {
+            color: #00ff88;
+            font-weight: 600;
         }
 </style>
 
@@ -666,11 +780,13 @@
 
 <body>
 <div id="lang-controls">
-    <button class="lang-btn active" onclick="setAppLang('vi')">Tiếng Việt</button>
-    <button class="lang-btn" onclick="setAppLang('en')">English</button>
-    <button class="lang-btn" onclick="setAppLang('zh')">中文</button>
-    <button class="lang-btn" id="btn-reset-ai" onclick="if(window.resetMLCalibration) window.resetMLCalibration()" style="background: rgba(255, 50, 50, 0.4); border-color: rgba(255, 100, 100, 0.5);">Reset Lớp</button>
-    <button class="lang-btn" id="btn-analytics" onclick="if(window.showLearningAnalytics) window.showLearningAnalytics()" style="background: rgba(50, 150, 255, 0.4); border-color: rgba(100, 150, 255, 0.5);">Báo cáo</button>
+    <select id="lang-select" onchange="setAppLang(this.value)">
+        <option value="vi">Tiếng Việt</option>
+        <option value="en">English</option>
+        <option value="zh">中文</option>
+    </select>
+    <button class="minimal-btn reset-btn" id="btn-reset-ai" onclick="if(window.resetMLCalibration) window.resetMLCalibration()">Reset Lớp</button>
+    <button class="minimal-btn" id="btn-analytics" onclick="if(window.showLearningAnalytics) window.showLearningAnalytics()">Báo cáo</button>
 </div>
 
 <div id="app-container">
@@ -758,7 +874,7 @@
     
     <!-- Privacy Badge -->
     <div id="privacy-badge">
-        <span>🔒</span> 100% Edge AI
+        <span>🔒</span> Edge AI Active
     </div>
 
     <!-- Exit button -->
@@ -782,6 +898,22 @@
     <video class="input_video"></video>
     <canvas class="output_canvas"></canvas>
 
+</div>
+
+<!-- Analytics Modal -->
+<div id="analytics-modal" class="hidden">
+    <div class="analytics-box">
+        <div class="analytics-header">
+            <h2>Báo Cáo Phiên Học</h2>
+            <button class="analytics-close" onclick="document.getElementById('analytics-modal').classList.add('hidden')">×</button>
+        </div>
+        <div class="analytics-content" id="analytics-content">
+            <!-- Data goes here -->
+        </div>
+        <div class="analytics-footer" id="analytics-footer">
+            <!-- Summary goes here -->
+        </div>
+    </div>
 </div>
 
 <script type="module" src="renderer.js"></script>

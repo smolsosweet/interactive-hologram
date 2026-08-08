@@ -1958,27 +1958,46 @@ window.addEventListener('app-hotkey', (e) => {
 });
 
 window.showLearningAnalytics = function() {
-    let report = "--- BÁO CÁO PHIÊN HỌC ---\n\n";
+    const modal = document.getElementById('analytics-modal');
+    const content = document.getElementById('analytics-content');
+    const footer = document.getElementById('analytics-footer');
+    if (!modal || !content || !footer) {
+        alert("Báo cáo: Lỗi giao diện Modal.");
+        return;
+    }
+    
+    let htmlContent = '';
     let total = 0;
+    let maxIdx = -1;
+    
     for (let i = 0; i < 9; i++) {
         const t = window.learningStats[i];
-        total += t;
         if (t > 0) {
-            report += `${PLANET_INFO[i].emoji} ${PLANET_INFO[i].vi.name}: ${t} giây\n`;
+            total += t;
+            if (maxIdx === -1 || t > window.learningStats[maxIdx]) maxIdx = i;
+            
+            htmlContent += `
+                <div class="analytics-item">
+                    <div class="analytics-item-name">
+                        <span style="font-size: 1.5rem">${PLANET_INFO[i].emoji}</span>
+                        ${PLANET_INFO[i].vi.name}
+                    </div>
+                    <div class="analytics-item-value">${t}s</div>
+                </div>
+            `;
         }
     }
-    report += `\nTổng thời gian tương tác: ${total} giây\n`;
     
-    // Suggest favorite planet
-    if (total > 0) {
-        let maxIdx = 0;
-        for (let i = 1; i < 9; i++) {
-            if (window.learningStats[i] > window.learningStats[maxIdx]) maxIdx = i;
-        }
-        report += `🌟 Sở thích nổi bật: Khám phá ${PLANET_INFO[maxIdx].vi.name} nhiều nhất!`;
+    if (total === 0) {
+        content.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.5); padding: 40px 0;">Chưa có dữ liệu tương tác trong phiên học này.</div>';
+        footer.innerHTML = '';
     } else {
-        report += "Chưa có dữ liệu tương tác.";
+        content.innerHTML = htmlContent;
+        footer.innerHTML = `
+            Tổng thời gian tương tác: <span class="analytics-highlight">${total}s</span><br>
+            ⭐ Học sinh đặc biệt yêu thích <strong>${PLANET_INFO[maxIdx].vi.name}</strong>.
+        `;
     }
     
-    alert(report);
+    modal.classList.remove('hidden');
 };

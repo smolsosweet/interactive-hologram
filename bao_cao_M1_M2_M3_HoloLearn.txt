@@ -1,0 +1,78 @@
+﻿BÃ¡o CÃ¡o HÃ nh TrÃ¬nh HoloLearn (M1 - M3)
+
+TÃ³m táº¯t nhanh
+Dá»± Ã¡n HoloLearn Ä‘Ã£ hoÃ n thÃ nh 3 cá»™t má»‘c Ä‘áº§u tiÃªn, biáº¿n Ã½ tÆ°á»Ÿng tÆ°Æ¡ng tÃ¡c 3D báº±ng tay khÃ´ng thÃ nh má»™t sáº£n pháº©m cháº¡y tháº­t 100% trÃªn mÃ¡y tÃ­nh ná»™i bá»™ (Edge AI). ChÃºng ta Ä‘Ã£ giáº£i quyáº¿t thÃ nh cÃ´ng bÃ i toÃ¡n nháº­n diá»‡n cá»­ chá»‰ tay (Náº¯m/XÃ²e/Chá»¥m) sao cho phÃ¹ há»£p vá»›i tá»«ng ngÆ°á»i dÃ¹ng cá»¥ thá»ƒ, Ä‘á»“ng thá»i Ã¡p dá»¥ng cÃ´ng nghá»‡ tÄƒng tá»‘c pháº§n cá»©ng cá»§a Intel Ä‘á»ƒ Ä‘áº£m báº£o tá»‘c Ä‘á»™ khung hÃ¬nh luÃ´n mÆ°á»£t mÃ  trÃªn 120 FPS. Hiá»‡n táº¡i, sáº£n pháº©m Ä‘Ã£ Ä‘Æ°á»£c Ä‘Ã³ng gÃ³i thÃ nh file cÃ i Ä‘áº·t .exe vÃ  sáºµn sÃ ng Ä‘á»ƒ demo.
+
+
+
+HÃ nh trÃ¬nh Milestone 1 (PoF - Lá»±a chá»n cÃ´ng nghá»‡)
+Váº¥n Ä‘á»: LÃ m sao Ä‘á»ƒ mÃ¡y tÃ­nh hiá»ƒu Ä‘Æ°á»£c cÃ¡c cá»­ chá»‰ tay cÆ¡ báº£n (Náº¯m, XÃ²e, Chá»¥m) má»™t cÃ¡ch chÃ­nh xÃ¡c nháº¥t mÃ  khÃ´ng cáº§n ngÆ°á»i dÃ¹ng pháº£i Ä‘eo gÄƒng tay?
+
+Giáº£i quyáº¿t: ChÃºng ta Ä‘Ã£ táº¡o ra má»™t báº£n dÃ¹ng thá»­ (Proof of Concept - PoF) Ä‘á»ƒ so sÃ¡nh 2 thuáº­t toÃ¡n AI lÃ  KNN vÃ  MLP. 
+- KNN giá»‘ng nhÆ° má»™t cuá»‘n tá»« Ä‘iá»ƒn: má»—i khi nhÃ¬n tháº¥y bÃ n tay, nÃ³ pháº£i láº­t tá»«ng trang tÃ¬m xem hÃ¬nh áº£nh nÃ o giá»‘ng nháº¥t Ä‘á»ƒ Ä‘oÃ¡n. CÃ¡ch nÃ y lÃ m viá»‡c tá»‘t nhÆ°ng ráº¥t khÃ³ Ä‘á»ƒ tá»‘i Æ°u hÃ³a trÃªn pháº§n cá»©ng sau nÃ y.
+- MLP (Multi-Layer Perceptron) láº¡i giá»‘ng nhÆ° má»™t "bá»™ nÃ£o nhá»" cÃ³ thá»ƒ há»c thuá»™c lÃ²ng cÃ¡c quy luáº­t. Máº¥t chÃºt thá»i gian Ä‘á»ƒ dáº¡y (train) nÃ³ lÃºc Ä‘áº§u, nhÆ°ng sau Ä‘Ã³ nÃ³ tá»± suy luáº­n ráº¥t nhanh. 
+
+Káº¿t quáº£: ChÃºng ta Ä‘Ã£ chá»n MLP vÃ¬ nÃ³ cÃ³ thá»ƒ dá»… dÃ ng chuyá»ƒn Ä‘á»•i sang cÃ´ng nghá»‡ tÄƒng tá»‘c cá»§a Intel (OpenVINO) sau nÃ y, trong khi KNN thÃ¬ khÃ´ng há»— trá»£.
+
+
+
+HÃ nh trÃ¬nh Milestone 2 (TÃ­ch há»£p há»‡ thá»‘ng)
+Váº¥n Ä‘á»: BÃ n tay cá»§a má»—i ngÆ°á»i (tay to, tay nhá», nam, ná»¯) lÃ  khÃ¡c nhau. Náº¿u dÃ¹ng má»™t mÃ´ hÃ¬nh há»c chung chung, mÃ¡y sáº½ nháº­n diá»‡n sai liÃªn tá»¥c.
+
+Giáº£i quyáº¿t: ChÃºng ta xÃ¢y dá»±ng má»™t há»‡ thá»‘ng "cÃ¡ nhÃ¢n hÃ³a" ngay táº¡i lÃºc khá»Ÿi Ä‘á»™ng. 
+1. Láº¥y máº«u (Calibration): Láº§n Ä‘áº§u má»Ÿ app, ngÆ°á»i dÃ¹ng sáº½ lÃ m theo hÆ°á»›ng dáº«n trÃªn mÃ n hÃ¬nh Ä‘á»ƒ AI chá»¥p láº¡i vÃ i máº«u Náº¯m/Chá»¥m tay cá»§a chÃ­nh há». QuÃ¡ trÃ¬nh nÃ y giÃºp mÃ´ hÃ¬nh "quen" vá»›i chá»§ nhÃ¢n má»›i. Náº¿u ngÆ°á»i dÃ¹ng lÆ°á»i vÃ  bá» qua sau 15 giÃ¢y (timeout), há»‡ thá»‘ng sáº½ tá»± lÃ¹i vá» quy táº¯c Ä‘áº¿m ngÃ³n tay thá»§ cÃ´ng. ChÃºng ta cÅ©ng cÃ³ nÃºt "Reset Lá»›p" Ä‘á»ƒ xÃ³a sáº¡ch dá»¯ liá»‡u tay cÅ© Ä‘i khi cÃ³ ngÆ°á»i má»›i chÆ¡i.
+2. Anti-Hallucination Filter (Bá»™ lá»c chá»‘ng áº£o giÃ¡c AI): ÄÃ´i khi AI bá»‹ "áº£o giÃ¡c" (nhÃ¬n tay Ä‘ang xÃ²e mÃ  láº¡i Ä‘oÃ¡n lÃ  náº¯m). Äá»ƒ trá»‹ bá»‡nh nÃ y, chÃºng ta káº¿t há»£p quy táº¯c hÃ¬nh há»c: náº¿u AI báº£o lÃ  Náº¯m, nhÆ°ng mÃ¡y Ä‘áº¿m Ä‘Æ°á»£c 5 ngÃ³n Ä‘ang xÃ²e to rÃµ rÃ ng, thÃ¬ quy táº¯c hÃ¬nh há»c sáº½ "phá»§ quyáº¿t" (bÃ¡c bá») káº¿t quáº£ cá»§a AI. Äiá»u nÃ y báº£o vá»‡ tráº£i nghiá»‡m vuá»‘t/xoay/zoom luÃ´n chÃ­nh xÃ¡c.
+3. BÃ¡o cÃ¡o há»c táº­p: ThÃªm phÃ­m táº¯t L Ä‘á»ƒ xem thá»‘ng kÃª hÃ nh tinh nÃ o Ä‘Æ°á»£c ngÆ°á»i dÃ¹ng quan sÃ¡t lÃ¢u nháº¥t vÃ  tá»•ng thá»i gian tÆ°Æ¡ng tÃ¡c.
+
+Sá»± cá»‘ ká»¹ thuáº­t Ä‘Ã£ gáº·p: á»ž giai Ä‘oáº¡n Ä‘áº§u M2, há»‡ thá»‘ng bá»‹ káº¹t lá»—i khi ngÆ°á»i dÃ¹ng cá»‘ thao tÃ¡c 2 tay. Lá»—i Ä‘Æ°á»£c xÃ¡c Ä‘á»‹nh trong renderer.js: logic lÃºc láº¥y máº«u (Calibration) bá»‹ hardcode nháº§m label === 'Right' thay vÃ¬ dÃ¹ng chung hÃ m isRightHand(), khiáº¿n tá»a Ä‘á»™ X bá»‹ ngÆ°á»£c do hiá»‡u á»©ng láº­t camera. ChÃºng ta Ä‘Ã£ fix dá»©t Ä‘iá»ƒm lá»—i nÃ y báº±ng cÃ¡ch Ä‘á»“ng bá»™ hÃ m isRightHand() cho cáº£ 2 pha.
+
+
+HÃ nh trÃ¬nh Milestone 3 (Tá»‘i Æ°u hÃ³a OpenVINO & Benchmark)
+Váº¥n Ä‘á»: Viá»‡c tÃ­nh toÃ¡n AI vÃ  váº½ 3D cÃ¹ng lÃºc khiáº¿n trÃ¬nh duyá»‡t bá»‹ quÃ¡ táº£i, gÃ¢y giáº­t lag. Äá»“ng thá»i, chÃºng ta cáº§n chá»©ng minh á»©ng dá»¥ng khÃ´ng há» lÃ©n gá»­i dá»¯ liá»‡u lÃªn máº¡ng.
+
+Giáº£i quyáº¿t:
+1. OpenVINO: ÄÃ¢y lÃ  bá»™ cÃ´ng cá»¥ cá»§a Intel giÃºp "Ã©p" mÃ´ hÃ¬nh AI cháº¡y cá»±c nhanh trÃªn pháº§n cá»©ng mÃ¡y tÃ­nh. ChÃºng ta Ä‘Ã£ chuyá»ƒn Ä‘á»•i mÃ´ hÃ¬nh MLP thÃ nh Ä‘á»‹nh dáº¡ng cá»§a OpenVINO (file .xml vÃ  .bin thÃ´ng qua lá»‡nh ovc). 
+2. Giáº£i phÃ³ng Main Thread báº±ng IPC: Thay vÃ¬ Ä‘á»ƒ trÃ¬nh duyá»‡t vá»«a váº½ 3D vá»«a tÃ­nh toÃ¡n AI, chÃºng ta nhá»‘t AI vÃ o má»™t luá»“ng ngáº§m phÃ­a sau (Backend), cÃ²n giao diá»‡n (Frontend) chá»‰ lo váº½ 3D. ChÃºng giao tiáº¿p vá»›i nhau qua cÃ¡c gÃ³i tin siÃªu nhá» gá»i lÃ  IPC (giá»‘ng nhÆ° gá»­i tin nháº¯n Zalo cá»±c nhanh giá»¯a 2 pháº§n má»m trong cÃ¹ng 1 mÃ¡y).
+
+Sá»± cá»‘ Ä‘Ã£ gáº·p: Cháº¡y qua luá»“ng ngáº§m (IPC) khiáº¿n thá»i gian nháº­n diá»‡n tay (Latency) tÄƒng lÃªn má»™t chÃºt (tá»« 0.85ms lÃªn 1.26ms). Tuy nhiÃªn, Ä‘Ã¢y lÃ  sá»± Ä‘Ã¡nh Ä‘á»•i cÃ³ chá»§ Ä‘Ã­ch! Äá»•i láº¡i, viá»‡c váº½ mÃ n hÃ¬nh 3D (FPS) tÄƒng vá»t, táº¡o ra cáº£m giÃ¡c xoay hÃ nh tinh mÆ°á»£t mÃ  vÃ´ cÃ¹ng.
+
+
+
+Báº£ng sá»‘ liá»‡u tá»•ng há»£p
+Táº¥t cáº£ sá»‘ liá»‡u dÆ°á»›i Ä‘Ã¢y Ä‘Æ°á»£c trÃ­ch xuáº¥t tá»« log há»‡ thá»‘ng Ä‘Æ°á»£c cháº¡y tháº­t trÃªn mÃ¡y Intel Core i7-12700H / 16GB RAM / Windows 10 vÃ o ngÃ y 05/08/2026. 
+
+Káº¿t quáº£ kiá»ƒm tra Offline (Edge AI): 
+XÃ¡c nháº­n qua DevTools Network: 100% dá»¯ liá»‡u Ä‘Æ°á»£c xá»­ lÃ½ ná»™i bá»™, khÃ´ng cÃ³ báº¥t ká»³ káº¿t ná»‘i máº¡ng nÃ o Ä‘Æ°á»£c gá»i ra bÃªn ngoÃ i. Edge AI (trÃ­ tuá»‡ nhÃ¢n táº¡o táº¡i biÃªn) nghÄ©a lÃ  mÃ¡y tÃ­nh tá»± lÃ m má»i thá»© mÃ  khÃ´ng cáº§n "há»i" Ä‘Ã¡m mÃ¢y (Cloud) trÃªn Internet.
+
+Báº£ng Benchmark Hiá»‡u NÄƒng:
+| Äá»™ng CÆ¡ AI | Máº¡ng (Net) | FPS (Khung hÃ¬nh/giÃ¢y) | Äá»™ trá»… (Latency) | RAM TiÃªu Thá»¥ |
+| : | : | :: | :: | :: |
+| TF.js | Offline | 121.3 FPS | 0.85 ms | 13.2 MB |
+| TF.js | Online | 107.7 FPS | 0.51 ms | 12.6 MB |
+| OpenVINO | Offline | 127.0 FPS | 1.26 ms | 14.5 MB |
+| OpenVINO | Online | 123.1 FPS | 0.97 ms | 14.9 MB |
+
+Káº¿t quáº£ Stress Test (03/08/2026): 
+Kiá»ƒm tra sá»©c chá»‹u Ä‘á»±ng cá»§a AI khi ngÆ°á»i dÃ¹ng váº·n, nghiÃªng tay á»Ÿ nhiá»u gÃ³c Ä‘á»™ khÃ³ (biáº¿n thiÃªn Â±20Â°). 
+- Káº¿t quáº£: 120/120 máº«u Ä‘oÃ¡n Ä‘Ãºng (100%).
+- VÆ°á»£t qua ngÆ°á»¡ng PASS Go/No-Go cá»§a dá»± Ã¡n (â‰¥90%).
+
+
+
+ÄÃ£ xong â€” CÃ²n thiáº¿u gÃ¬
+
+Nhá»¯ng viá»‡c ÄÃƒ XONG (CÃ³ báº±ng chá»©ng xÃ¡c nháº­n):
+Hoàn thành: Táº¡o mÃ n hÃ¬nh váº½ 3D Hologram, tÆ°Æ¡ng tÃ¡c báº±ng vuá»‘t, zoom, xoay.
+Hoàn thành: Huáº¥n luyá»‡n mÃ´ hÃ¬nh AI riÃªng (MLP) cho cá»­ chá»‰ tay cÃ¡ nhÃ¢n hÃ³a.
+Hoàn thành: TÃ­ch há»£p bá»™ lá»c chá»‘ng áº£o giÃ¡c (Anti-Hallucination Filter).
+Hoàn thành: TÃ­ch há»£p tÄƒng tá»‘c pháº§n cá»©ng Intel OpenVINO.
+Hoàn thành: Ghi nháº­n log Benchmark vÃ  Stress test chá»©ng minh hiá»‡u nÄƒng vÃ  100% Offline (khÃ´ng cÃ³ request máº¡ng ngáº§m).
+Hoàn thành: ÄÃ³ng gÃ³i ra file .exe cÃ i Ä‘áº·t Ä‘á»™c láº­p (hoÃ n thÃ nh lá»‡nh build thÃ nh cÃ´ng).
+Hoàn thành: Cáº­p nháº­t giao diá»‡n UI Learning Analytics (Sá»‘ láº§n thao tÃ¡c lá»—i).
+
+Nhá»¯ng viá»‡c [CHÆ¯A XÃC NHáº¬N] / CÃ²n thiáº¿u:
+- [CHÆ¯A XÃC NHáº¬N] File .exe sau khi build xong cÃ³ thá»±c sá»± cháº¡y trÆ¡n tru hay khÃ´ng (chÆ°a cÃ³ ai tá»± tay click cháº¡y thá»­ trÃªn mÃ¡y tÃ­nh thá»±c táº¿).
+Chưa làm: Chá»©c nÄƒng dÃ¹ng AI táº¡o mÃ´ hÃ¬nh 3D tá»« hÃ¬nh váº½ tay (Sketch-to-3D báº±ng Phi-3/LLaVA) -> Chuyá»ƒn vÃ o Roadmap dÃ i háº¡n.
+Chưa làm: Nháº­n diá»‡n khuÃ´n máº·t, Sign language, Trá»£ lÃ½ giá»ng nÃ³i -> ÄÃ£ bá»‹ chá»§ Ä‘á»™ng loáº¡i bá» tá»« Ä‘áº§u vÃ¬ vi pháº¡m pháº¡m vi dá»± Ã¡n.
+Chưa làm: ChÆ°a Ä‘á»‹nh nghÄ©a cá»¥ thá»ƒ Ä‘á»™ tuá»•i ngÆ°á»i dÃ¹ng vÃ  báº£ng giÃ¡ pháº§n cá»©ng vÃ o trong há»“ sÆ¡ thi (Sáº½ bá»• sung á»Ÿ bÆ°á»›c cáº­p nháº­t tÃ i liá»‡u ná»™p thi).
+

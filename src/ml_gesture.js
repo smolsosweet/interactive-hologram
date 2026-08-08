@@ -41,6 +41,8 @@ function startTutorialStep(step) {
     window.isMlSamplingActive = false;
     currentSampleCount = 0;
     
+    document.body.classList.add('ml-calibrating');
+
     if (tutOverlay) tutOverlay.classList.remove('hidden');
     updateTutorialUI();
     
@@ -79,11 +81,11 @@ function updateTutorialUI() {
     } else if (window.mlTutorialStep === 1) {
         tutTitle.textContent = "Bước 2: Xòe tay";
         tutDesc.textContent = "Vui lòng XÒE RỘNG BÀN TAY của bạn ra.";
-        tutIcon.textContent = "🖐";
+        tutIcon.textContent = "🖐️";
     } else if (window.mlTutorialStep === 2) {
         tutTitle.textContent = "Bước 3: Chụm tay (Pinch)";
         tutDesc.textContent = "Chụm 2 ĐẦU NGÓN TAY (Cái & Trỏ) vào nhau để Zoom.";
-        tutIcon.textContent = "✌️";
+        tutIcon.textContent = "🤏";
     }
     
     tutStatus.textContent = `Đang lấy mẫu... (${currentSampleCount}/${SAMPLES_NEEDED})`;
@@ -334,6 +336,7 @@ function finishTutorial(fallback) {
     clearTimeout(tutorialTimer);
     window.isMlCalibrating = false;
     window.mlTutorialStep = -1;
+    document.body.classList.remove('ml-calibrating');
     if (fallback) {
         window.useFallbackRuleBased = true;
     } else {
