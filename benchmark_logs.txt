@@ -231,3 +231,8 @@
 [2026-08-08T17:59:56.142Z] Engine: TF.js | Net: Online | T: -1786211916s | FPS: 120 | Latency: 0ms | RAM: 9.5MB
 [2026-08-08T18:00:06.154Z] Engine: TF.js | Net: Online | T: -1786211906s | FPS: 117 | Latency: 0ms | RAM: 10.8MB
 [2026-08-08T18:00:16.160Z] Engine: TF.js | Net: Online | T: -1786211896s | FPS: 127 | Latency: 0ms | RAM: 10.2MB
+[2026-08-08T18:02:22.992Z] Engine: TF.js | Net: Online | T: -1786212122s | FPS: 90 | Latency: 0ms | RAM: 11.8MB
+[2026-08-08T18:02:43.854Z] Engine: TF.js | Net: Online | T: -1786212143s | FPS: 127 | Latency: 0ms | RAM: 10.5MB
+[2026-08-08T18:03:25.106Z] Engine: TF.js | Net: Online | T: -1786212185s | FPS: 106 | Latency: 0ms | RAM: 11.0MB
+[2026-08-08T18:05:12.965Z] Engine: TF.js | Net: Online | T: -1786212077s | FPS: 60 | Latency: 0ms | RAM: 8.8MB
+[2026-08-08T18:05:22.966Z] Engine: OpenVINO | Net: Online | T: -1786212067s | FPS: 143 | Latency: 0ms | RAM: 9.5MB

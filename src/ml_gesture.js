@@ -77,7 +77,7 @@ function updateTutorialUI() {
     if (window.mlTutorialStep === 0) {
         tutTitle.textContent = "Bước 1: Nắm tay";
         tutDesc.textContent = "Vui lòng đưa tay vào camera và NẮM CHẶT TAY.";
-        tutIcon.textContent = "👊";
+        tutIcon.textContent = "✊";
     } else if (window.mlTutorialStep === 1) {
         tutTitle.textContent = "Bước 2: Xòe tay";
         tutDesc.textContent = "Vui lòng XÒE RỘNG BÀN TAY của bạn ra.";
@@ -96,10 +96,17 @@ function updateTutorialUI() {
     const progCont = document.getElementById('tut-progress-container');
     const tutStat = document.getElementById('tut-status');
     if (startBtn && progCont && tutStat) {
-        startBtn.style.display = 'block';
-        if (skipBtn) skipBtn.style.display = 'block';
-        progCont.style.display = 'none';
-        tutStat.style.display = 'none';
+        if (!window.isMlSamplingActive) {
+            startBtn.style.display = 'block';
+            if (skipBtn) skipBtn.style.display = 'block';
+            progCont.style.display = 'none';
+            tutStat.style.display = 'none';
+        } else {
+            startBtn.style.display = 'none';
+            if (skipBtn) skipBtn.style.display = 'none';
+            progCont.style.display = 'block';
+            tutStat.style.display = 'block';
+        }
     }
 }
 
