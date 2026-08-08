@@ -1071,20 +1071,34 @@ function updateOrbits(delta) {
 // ============================================================
 function checkFist(lm, isRight) {
     if (!lm) return false;
+    let isFist = false;
     if (typeof window.predictMLGestureSync === 'function') {
         let pred = window.predictMLGestureSync(lm, isRight);
-        if (pred !== "fallback") return pred === 0;
+        if (pred !== "fallback") isFist = (pred === 0);
+    } else {
+        isFist = countFingersAll(lm) === 0;
     }
-    return countFingersAll(lm) === 0;
+    
+    // ANTI-HALLUCINATION (Geometric Override)
+    const geomFingers = countFingersAll(lm);
+    if (!isFist && geomFingers === 0) {
+        isFist = true;
+        setGestureHUD('⚠️ [Geometric Overridden] - Anti-Hallucination (FIST)');
+    }
+    if (isFist && geomFingers > 0) {
+        isFist = false;
+        setGestureHUD('⚠️ [Geometric Overridden] - Anti-Hallucination (NOT FIST)');
+    }
+    
+    return isFist;
 }
 
 function checkPinch(lm, isRight) {
     if (!lm) return false;
-    if (typeof window.predictMLGestureSync === 'function') {
-        let pred = window.predictMLGestureSync(lm, isRight);
-        if (pred !== "fallback") return pred === 2;
-    }
-    return countFingersAll(lm) > 0; // Fallback cũ: Miễn không phải nắm tay thì coi là Zoom
+    // BYPASS AI MODEL CHO ZOOM: M3 dùng Mode A (tay trái đã nắm đấm), 
+    // nên tay phải chỉ cần lớn hơn 0 ngón là chắc chắn có ý định Zoom.
+    // Điều này giúp zoom mượt mà tuyệt đối khi tay xòe to (5) hoặc chụm lại (2, 3 ngón)
+    return countFingersAll(lm) > 0;
 }
 
 function isThumbExtended(lm) {

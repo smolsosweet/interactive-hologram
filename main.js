@@ -78,9 +78,26 @@ app.whenReady().then(() => {
 
     ipcMain.handle('ov-init', async (event, weightsArrayBuffer) => {
       try {
-        console.log("[Main] ov-init called, writing weights to bin file...");
-        const uniqueSuffix = Date.now();
+        console.log("[Main] ov-init called, cleaning up old temp files...");
         const userDataPath = app.getPath('userData');
+        
+        // 1. Dọn dẹp rác (Memory Leak Cleanup)
+        try {
+            const files = fs.readdirSync(userDataPath);
+            files.forEach(file => {
+                if (file.startsWith('gesture_mlp_temp_') && (file.endsWith('.xml') || file.endsWith('.bin'))) {
+                    const filePath = path.join(userDataPath, file);
+                    fs.unlinkSync(filePath);
+                    console.log(`[Main] Cleaned up old OpenVINO file: ${file}`);
+                }
+            });
+        } catch (cleanupErr) {
+            console.error("[Main] Failed to clean up old temp files:", cleanupErr);
+        }
+
+        // 2. Tạo file mới
+        console.log("[Main] Writing new weights to bin file...");
+        const uniqueSuffix = Date.now();
         const binPath = path.join(userDataPath, `gesture_mlp_temp_${uniqueSuffix}.bin`);
         const xmlPath = path.join(userDataPath, `gesture_mlp_temp_${uniqueSuffix}.xml`);
         const originalXmlPath = path.join(__dirname, 'src', 'vendor', 'gesture_mlp_base.xml');
@@ -97,7 +114,7 @@ app.whenReady().then(() => {
         console.log("[Main] OpenVINO model compiled successfully.");
         return 'success';
       } catch (err) {
-        console.error("Lỗi khi ghi đè weights:", err);
+        console.error("Lỗi khi ghi dữ liệu weights:", err);
         return 'error';
       }
     });

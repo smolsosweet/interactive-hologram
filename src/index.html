@@ -338,6 +338,32 @@
             height: 80px; 
         }
 
+        /* ---- Privacy Badge ---- */
+        #privacy-badge {
+            position: absolute;
+            top: 85px;
+            left: 24px;
+            z-index: 30;
+            background: rgba(0, 255, 136, 0.15);
+            border: 1px solid rgba(0, 255, 136, 0.4);
+            color: #00ff88;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        body.panel-active #privacy-badge {
+            transform: scale(0.8);
+            transform-origin: top left;
+        }
+
         /* ---- Nút Thoát Ứng Dụng (Góc phải trên) ---- */
         #exit-app-btn {
             position: absolute;
@@ -728,6 +754,11 @@
              và lưu lại thành file delphora.svg hoặc delphora.png thì mới hiển thị được. -->
         <img src="../logo/delphora.svg" alt="Delphora">
         <img src="../logo/fpt.svg" alt="FPT">
+    </div>
+    
+    <!-- Privacy Badge -->
+    <div id="privacy-badge">
+        <span>🔒</span> 100% Edge AI
     </div>
 
     <!-- Exit button -->
