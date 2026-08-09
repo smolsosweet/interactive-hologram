@@ -75,16 +75,16 @@ window.startCurrentSample = function() {
 
 function updateTutorialUI() {
     if (window.mlTutorialStep === 0) {
-        tutTitle.textContent = "Bước 1: Nắm tay";
-        tutDesc.textContent = "Vui lòng đưa tay vào camera và NẮM CHẶT TAY.";
+        tutTitle.textContent = "Bước 1: Cố định Mục tiêu";
+        tutDesc.textContent = "Khóa hệ thống bằng cách NẮM CHẶT TAY trước camera.";
         tutIcon.textContent = "✊";
     } else if (window.mlTutorialStep === 1) {
-        tutTitle.textContent = "Bước 2: Xòe tay";
-        tutDesc.textContent = "Vui lòng XÒE RỘNG BÀN TAY của bạn ra.";
+        tutTitle.textContent = "Bước 2: Quét Radar Không gian";
+        tutDesc.textContent = "Kích hoạt cảm biến bằng cách XÒE RỘNG BÀN TAY.";
         tutIcon.textContent = "🖐️";
     } else if (window.mlTutorialStep === 2) {
-        tutTitle.textContent = "Bước 3: Chụm tay (Pinch)";
-        tutDesc.textContent = "Chụm 2 ĐẦU NGÓN TAY (Cái & Trỏ) vào nhau để Zoom.";
+        tutTitle.textContent = "Bước 3: Tinh chỉnh Tiêu cự";
+        tutDesc.textContent = "Chụm 2 ĐẦU NGÓN TAY (Cái & Trỏ) để thiết lập thu phóng.";
         tutIcon.textContent = "🤏";
     }
     
@@ -136,11 +136,13 @@ window.processMLCalibration = function(landmarks, isRight) {
             startTutorialStep(window.mlTutorialStep + 1);
         } else {
             // Done gathering! Train it.
-            tutTitle.textContent = "Đang huấn luyện AI...";
-            tutDesc.textContent = "Vui lòng đợi trong giây lát...";
-            tutIcon.textContent = "🚀";
-            tutStatus.textContent = "Training...";
+            tutTitle.textContent = "Đang đồng bộ Dữ liệu Sinh trắc...";
+            tutDesc.textContent = "Vui lòng đợi trong khi hệ thống mã hóa thao tác của bạn...";
+            tutIcon.textContent = "⚙️";
+            tutStatus.textContent = "Đồng bộ...";
             tutProgressBar.style.width = "100%";
+            document.getElementById('tut-start-btn').style.display = 'none';
+            document.getElementById('tut-skip-btn').style.display = 'none';
             setTimeout(trainMLModel, 100);
         }
     }
