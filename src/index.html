@@ -10,7 +10,40 @@
     <!-- True Offline Edge AI: Sử dụng font hệ thống thay vì Google Fonts -->
     <style>
         body { font-family: 'Inter', 'Space Grotesk', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    </style>
+    
+    #left-hand-hint {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(10, 10, 25, 0.7);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 10px 20px;
+        border-radius: 20px;
+        color: rgba(255, 255, 255, 0.9);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 100;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+        animation: pulseHint 3s infinite;
+    }
+    
+    @keyframes pulseHint {
+        0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.2); }
+        70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+    }
+    
+    #left-hand-hint.hidden {
+        opacity: 0;
+    }
+
+</style>
     <style>
         /* ---- Reset ---- */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -988,6 +1021,13 @@
 
     <!-- Exit button -->
     
+
+    
+    <!-- Left Hand Modifier Hint -->
+    <div id="left-hand-hint" class="hidden">
+        <span style="font-size: 1.2rem;">💡</span>
+        <span id="left-hand-hint-text">Dùng TAY TRÁI làm mỏ neo để kéo/thả không gian</span>
+    </div>
 
     <!-- HUD: Gesture indicator + progress bar -->
     <div id="hud-gesture-wrap">

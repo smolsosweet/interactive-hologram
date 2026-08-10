@@ -581,7 +581,8 @@ window.UI_I18N = {
         btn_analytics: 'Báo cáo',
         hud_gesture: 'CHƯA NHẬN DIỆN',
         tut_timeout: 'Bạn có thể Bỏ qua nếu muốn dùng thuật toán mặc định.',
-        analytics_title: 'Báo Cáo Phiên Học'
+        analytics_title: 'Báo Cáo Phiên Học',
+        hint_left_hand: 'Dùng TAY TRÁI làm mỏ neo để kéo/thả không gian'
     },
     en: {
         idle: 'Raise your hand to start exploring',
@@ -605,7 +606,8 @@ window.UI_I18N = {
         btn_analytics: 'Analytics',
         hud_gesture: 'NOT RECOGNIZED',
         tut_timeout: 'You can Skip to use the default algorithm.',
-        analytics_title: 'Learning Session Report'
+        analytics_title: 'Learning Session Report',
+        hint_left_hand: 'Use your LEFT HAND as an anchor to drag/zoom'
     },
     zh: {
         idle: '举手开始探索',
@@ -629,7 +631,8 @@ window.UI_I18N = {
         btn_analytics: '数据分析',
         hud_gesture: '未识别',
         tut_timeout: '如果您想使用默认算法，可以跳过。',
-        analytics_title: '学习报告'
+        analytics_title: '学习报告',
+        hint_left_hand: '使用左手作为锚点来拖动/缩放空间'
     }
 };
 
@@ -657,6 +660,9 @@ window.setAppLang = function(lang) {
     
     const tutTimeout = document.getElementById('tut-timeout');
     if (tutTimeout) tutTimeout.textContent = t.tut_timeout;
+    
+    const hintText = document.getElementById('left-hand-hint-text');
+    if (hintText) hintText.textContent = t.hint_left_hand;
     
     const analyticsTitle = document.getElementById('analytics-title');
     if (analyticsTitle) analyticsTitle.textContent = t.analytics_title;
@@ -2100,4 +2106,16 @@ window.showLearningAnalytics = function() {
     }
     
     modal.classList.remove('hidden');
+};
+
+
+window.showLeftHandHint = function() {
+    const hint = document.getElementById('left-hand-hint');
+    if (hint) {
+        hint.classList.remove('hidden');
+        // Hide after 15 seconds
+        setTimeout(() => {
+            hint.classList.add('hidden');
+        }, 15000);
+    }
 };

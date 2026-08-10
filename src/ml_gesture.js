@@ -371,6 +371,7 @@ function finishTutorial(fallback) {
         window.useFallbackRuleBased = false;
     }
     if (tutOverlay) tutOverlay.classList.add('hidden');
+    if (window.showLeftHandHint) window.showLeftHandHint();
 }
 
 window.predictMLGestureSync = function(landmarks, isRight) {
