@@ -484,7 +484,11 @@ const HUD_TRANSLATIONS = {
         'ĐÃ CHUYỂN SANG CAMERA RỜI!': 'SWITCHED TO EXTERNAL CAMERA!',
         'ĐANG DÙNG CAMERA LAPTOP': 'USING LAPTOP CAMERA',
         'LỖI:': 'ERROR:',
-        'ĐANG QUÉT CAMERA MỚI...': 'SCANNING FOR NEW CAMERA...'
+        'ĐANG QUÉT CAMERA MỚI...': 'SCANNING FOR NEW CAMERA...',
+        'CHƯA NHẬN DIỆN': 'NOT RECOGNIZED',
+        'NẮM CHẶT': 'FIST',
+        'XÒE TAY': 'OPEN HAND',
+        'PINCH': 'PINCH'
     },
     'zh': {
         'ĐÃ LƯU VỊ TRÍ': '已保存位置',
@@ -504,7 +508,11 @@ const HUD_TRANSLATIONS = {
         'ĐÃ CHUYỂN SANG CAMERA RỜI!': '已切换到外接相机！',
         'ĐANG DÙNG CAMERA LAPTOP': '正在使用笔记本电脑相机',
         'LỖI:': '错误:',
-        'ĐANG QUÉT CAMERA MỚI...': '正在扫描新相机...'
+        'ĐANG QUÉT CAMERA MỚI...': '正在扫描新相机...',
+        'CHƯA NHẬN DIỆN': '未识别',
+        'NẮM CHẶT': '握拳',
+        'XÒE TAY': '张开手',
+        'PINCH': '捏'
     }
 };
 
@@ -550,6 +558,81 @@ function setLoadingProgress(text) {
 // ============================================================
 // 5. PLANET INFO PANEL
 // ============================================================
+window.UI_I18N = {
+    vi: {
+        idle: 'Đưa tay lên để bắt đầu khám phá',
+        tut_title_1: 'Bước 1: Cố định Mục tiêu',
+        tut_desc_1: 'Khóa hệ thống bằng cách NẮM CHẶT TAY trước camera.',
+        tut_title_2: 'Bước 2: Quét Radar Không gian',
+        tut_desc_2: 'Kích hoạt cảm biến bằng cách XÒE RỘNG BÀN TAY.',
+        tut_title_3: 'Bước 3: Tinh chỉnh Tiêu cự',
+        tut_desc_3: 'Chụm 2 ĐẦU NGÓN TAY (Cái & Trỏ) để thiết lập thu phóng.',
+        tut_start: 'Bắt đầu lấy mẫu',
+        tut_skip: 'Bỏ qua',
+        tut_timeout: 'Bạn có thể Bỏ qua nếu muốn dùng thuật toán mặc định.',
+        analytics_empty: 'Chưa có dữ liệu tương tác trong phiên học này.',
+        analytics_total: 'Tổng thời gian tương tác:',
+        analytics_fav: '⭐ Học sinh đặc biệt yêu thích',
+        tut_sampling: 'Đang lấy mẫu...',
+        tut_syncing: 'Đang đồng bộ Dữ liệu Sinh trắc...',
+        tut_sync_desc: 'Vui lòng đợi trong khi hệ thống mã hóa thao tác của bạn...',
+        tut_sync_status: 'Đồng bộ...',
+        btn_reset: 'Reset Lớp',
+        btn_analytics: 'Báo cáo',
+        hud_gesture: 'CHƯA NHẬN DIỆN',
+        tut_timeout: 'Bạn có thể Bỏ qua nếu muốn dùng thuật toán mặc định.',
+        analytics_title: 'Báo Cáo Phiên Học'
+    },
+    en: {
+        idle: 'Raise your hand to start exploring',
+        tut_title_1: 'Step 1: Lock Target',
+        tut_desc_1: 'Lock the system by making a FIST in front of the camera.',
+        tut_title_2: 'Step 2: Space Radar Scan',
+        tut_desc_2: 'Activate the sensor by OPENING YOUR HAND wide.',
+        tut_title_3: 'Step 3: Focus Calibration',
+        tut_desc_3: 'PINCH your Thumb and Index fingers to set the zoom.',
+        tut_start: 'Start Calibration',
+        tut_skip: 'Skip',
+        tut_timeout: 'You can Skip if you want to use the default algorithm.',
+        analytics_empty: 'No interaction data in this session.',
+        analytics_total: 'Total interaction time:',
+        analytics_fav: '⭐ Students particularly loved',
+        tut_sampling: 'Sampling...',
+        tut_syncing: 'Syncing Biometric Data...',
+        tut_sync_desc: 'Please wait while the system encodes your gestures...',
+        tut_sync_status: 'Syncing...',
+        btn_reset: 'Recalibrate',
+        btn_analytics: 'Analytics',
+        hud_gesture: 'NOT RECOGNIZED',
+        tut_timeout: 'You can Skip to use the default algorithm.',
+        analytics_title: 'Learning Session Report'
+    },
+    zh: {
+        idle: '举手开始探索',
+        tut_title_1: '步骤 1: 锁定目标',
+        tut_desc_1: '在摄像头前【握拳】以锁定系统。',
+        tut_title_2: '步骤 2: 空间雷达扫描',
+        tut_desc_2: '通过【张开手掌】激活传感器。',
+        tut_title_3: '步骤 3: 焦距微调',
+        tut_desc_3: '捏住【拇指和食指】以设置缩放。',
+        tut_start: '开始采样',
+        tut_skip: '跳过',
+        tut_timeout: '如果您想使用默认算法，可以跳过。',
+        analytics_empty: '本次会话无交互数据。',
+        analytics_total: '总交互时间:',
+        analytics_fav: '⭐ 学生特别喜欢',
+        tut_sampling: '采样中...',
+        tut_syncing: '同步生物特征数据中...',
+        tut_sync_desc: '请稍候，系统正在编码您的操作...',
+        tut_sync_status: '同步中...',
+        btn_reset: '重新校准',
+        btn_analytics: '数据分析',
+        hud_gesture: '未识别',
+        tut_timeout: '如果您想使用默认算法，可以跳过。',
+        analytics_title: '学习报告'
+    }
+};
+
 window.currentAppLang = 'vi';
 
 window.setAppLang = function(lang) {
@@ -558,11 +641,28 @@ window.setAppLang = function(lang) {
     const activeBtn = document.querySelector(`.lang-btn[onclick="setAppLang('${lang}')"]`);
     if (activeBtn) activeBtn.classList.add('active');
     
+    const t = window.UI_I18N[lang] || window.UI_I18N['vi'];
+
     const idleText = document.getElementById('idle-text');
-    if (idleText) {
-        if (lang === 'vi') idleText.textContent = 'Đưa tay lên để bắt đầu khám phá';
-        else if (lang === 'en') idleText.textContent = 'Raise your hand to start exploring';
-        else if (lang === 'zh') idleText.textContent = '举手开始探索';
+    if (idleText) idleText.textContent = t.idle;
+    
+    const btnReset = document.getElementById('btn-reset-ai');
+    if (btnReset) btnReset.textContent = t.btn_reset;
+    const btnAnalytics = document.getElementById('btn-analytics');
+    if (btnAnalytics) btnAnalytics.textContent = t.btn_analytics;
+    const btnStart = document.getElementById('tut-start-btn');
+    if (btnStart) btnStart.textContent = t.tut_start;
+    const btnSkip = document.getElementById('tut-skip-btn');
+    if (btnSkip) btnSkip.textContent = t.tut_skip;
+    
+    const tutTimeout = document.getElementById('tut-timeout');
+    if (tutTimeout) tutTimeout.textContent = t.tut_timeout;
+    
+    const analyticsTitle = document.getElementById('analytics-title');
+    if (analyticsTitle) analyticsTitle.textContent = t.analytics_title;
+    
+    if (window.updateTutorialUI) {
+        window.updateTutorialUI();
     }
     
     if (ipcRenderer) {
@@ -1961,41 +2061,41 @@ window.showLearningAnalytics = function() {
     const modal = document.getElementById('analytics-modal');
     const content = document.getElementById('analytics-content');
     const footer = document.getElementById('analytics-footer');
-    if (!modal || !content || !footer) {
-        alert("Báo cáo: Lỗi giao diện Modal.");
-        return;
-    }
+    if (!modal || !content || !footer) return;
+    
+    const lang = window.currentAppLang || 'vi';
+    const t = window.UI_I18N[lang];
     
     let htmlContent = '';
     let total = 0;
     let maxIdx = -1;
     
     for (let i = 0; i < 9; i++) {
-        const t = window.learningStats[i];
-        if (t > 0) {
-            total += t;
-            if (maxIdx === -1 || t > window.learningStats[maxIdx]) maxIdx = i;
+        const time = window.learningStats[i];
+        if (time > 0) {
+            total += time;
+            if (maxIdx === -1 || time > window.learningStats[maxIdx]) maxIdx = i;
             
             htmlContent += `
                 <div class="analytics-item">
                     <div class="analytics-item-name">
                         <span style="font-size: 1.5rem">${PLANET_INFO[i].emoji}</span>
-                        ${PLANET_INFO[i].vi.name}
+                        ${PLANET_INFO[i][lang].name}
                     </div>
-                    <div class="analytics-item-value">${t}s</div>
+                    <div class="analytics-item-value">${time}s</div>
                 </div>
             `;
         }
     }
     
     if (total === 0) {
-        content.innerHTML = '<div style="text-align: center; color: rgba(255,255,255,0.5); padding: 40px 0;">Chưa có dữ liệu tương tác trong phiên học này.</div>';
+        content.innerHTML = `<div style="text-align: center; color: rgba(255,255,255,0.5); padding: 40px 0;">${t.analytics_empty}</div>`;
         footer.innerHTML = '';
     } else {
         content.innerHTML = htmlContent;
         footer.innerHTML = `
-            Tổng thời gian tương tác: <span class="analytics-highlight">${total}s</span><br>
-            ⭐ Học sinh đặc biệt yêu thích <strong>${PLANET_INFO[maxIdx].vi.name}</strong>.
+            ${t.analytics_total} <span class="analytics-highlight">${total}s</span><br>
+            ${t.analytics_fav} <strong>${PLANET_INFO[maxIdx][lang].name}</strong>.
         `;
     }
     

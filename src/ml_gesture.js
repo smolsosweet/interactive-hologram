@@ -74,21 +74,33 @@ window.startCurrentSample = function() {
 }
 
 function updateTutorialUI() {
+    const t = window.UI_I18N ? (window.UI_I18N[window.currentAppLang] || window.UI_I18N['vi']) : null;
+    
     if (window.mlTutorialStep === 0) {
-        tutTitle.textContent = "Bước 1: Cố định Mục tiêu";
-        tutDesc.textContent = "Khóa hệ thống bằng cách NẮM CHẶT TAY trước camera.";
+        if (t) {
+            tutTitle.textContent = t.tut_title_1;
+            tutDesc.textContent = t.tut_desc_1;
+        }
         tutIcon.textContent = "✊";
     } else if (window.mlTutorialStep === 1) {
-        tutTitle.textContent = "Bước 2: Quét Radar Không gian";
-        tutDesc.textContent = "Kích hoạt cảm biến bằng cách XÒE RỘNG BÀN TAY.";
+        if (t) {
+            tutTitle.textContent = t.tut_title_2;
+            tutDesc.textContent = t.tut_desc_2;
+        }
         tutIcon.textContent = "🖐️";
     } else if (window.mlTutorialStep === 2) {
-        tutTitle.textContent = "Bước 3: Tinh chỉnh Tiêu cự";
-        tutDesc.textContent = "Chụm 2 ĐẦU NGÓN TAY (Cái & Trỏ) để thiết lập thu phóng.";
+        if (t) {
+            tutTitle.textContent = t.tut_title_3;
+            tutDesc.textContent = t.tut_desc_3;
+        }
         tutIcon.textContent = "🤏";
     }
     
-    tutStatus.textContent = `Đang lấy mẫu... (${currentSampleCount}/${SAMPLES_NEEDED})`;
+    if (t) {
+        tutStatus.textContent = `${t.tut_sampling} (${currentSampleCount}/${SAMPLES_NEEDED})`;
+    } else {
+        tutStatus.textContent = `Đang lấy mẫu... (${currentSampleCount}/${SAMPLES_NEEDED})`;
+    }
     tutProgressBar.style.width = `${(currentSampleCount / SAMPLES_NEEDED) * 100}%`;
 
     const startBtn = document.getElementById('tut-start-btn');
@@ -136,10 +148,17 @@ window.processMLCalibration = function(landmarks, isRight) {
             startTutorialStep(window.mlTutorialStep + 1);
         } else {
             // Done gathering! Train it.
-            tutTitle.textContent = "Đang đồng bộ Dữ liệu Sinh trắc...";
-            tutDesc.textContent = "Vui lòng đợi trong khi hệ thống mã hóa thao tác của bạn...";
-            tutIcon.textContent = "⚙️";
-            tutStatus.textContent = "Đồng bộ...";
+            const t = window.UI_I18N ? (window.UI_I18N[window.currentAppLang] || window.UI_I18N['vi']) : null;
+            if (t) {
+                tutTitle.textContent = t.tut_syncing;
+                tutDesc.textContent = t.tut_sync_desc;
+                tutStatus.textContent = t.tut_sync_status;
+            } else {
+                tutTitle.textContent = "Đang đồng bộ Dữ liệu Sinh trắc...";
+                tutDesc.textContent = "Vui lòng đợi trong khi hệ thống mã hóa thao tác của bạn...";
+                tutStatus.textContent = "Đồng bộ...";
+            }
+            tutIcon.textContent = "⏳";
             tutProgressBar.style.width = "100%";
             document.getElementById('tut-start-btn').style.display = 'none';
             document.getElementById('tut-skip-btn').style.display = 'none';
