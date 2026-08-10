@@ -1,4 +1,13 @@
-const { app, BrowserWindow, globalShortcut, dialog, screen, ipcMain } = require('electron')
+const files = fs.readdirSync(userDataPath);
+            files.forEach(file => {
+                if (file.startsWith('gesture_mlp_temp_') && (file.endsWith('.xml') || file.endsWith('.bin'))) {
+                    const filePath = path.join(userDataPath, file);
+                    try {
+                        fs.unlinkSync(filePath);
+                        console.log(`[Main] Cleaned up old OpenVINO file: ${file}`);
+                    } catch(e) {}
+                }
+            });const { app, BrowserWindow, globalShortcut, dialog, screen, ipcMain } = require('electron')
 const path = require('path')
 const { autoUpdater } = require('electron-updater')
 

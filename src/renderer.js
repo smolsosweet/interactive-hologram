@@ -960,6 +960,7 @@ function enterPlanetFocus(idx) {
     }
 }
 
+window.exitPlanetFocus = exitPlanetFocus;
 function exitPlanetFocus() {
     if (!inPlanetFocus) return;
     inPlanetFocus = false;

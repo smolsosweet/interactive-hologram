@@ -447,6 +447,8 @@ function extractFeatures(landmarks, isRight) {
 
 // Reset Calibration for Session-based privacy
 window.resetMLCalibration = function() {
+    window.learningStats = new Array(9).fill(0);
+    if (window.exitPlanetFocus) window.exitPlanetFocus();
     window.mlSamples = { 0: [], 2: [], 5: [] };
     if (window.mlModel) {
         window.mlModel.dispose();
