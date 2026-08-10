@@ -468,13 +468,14 @@
             transition: all 0.5s ease;
         }
         body.ml-calibrating .output_canvas {
-            right: 8%;
-            top: 50%;
-            bottom: auto;
-            left: auto;
-            transform: translateY(-50%) scaleX(-1);
-            width: 520px;
-            height: 390px;
+            left: 50% !important;
+            right: auto !important;
+            top: 50% !important;
+            bottom: auto !important;
+            /* Note: scaleX(-1) is to mirror the webcam */
+            transform: translate(calc(-50% + 220px), -50%) scaleX(-1) !important;
+            width: 520px !important;
+            height: 390px !important;
             z-index: 100;
             border-width: 4px;
             box-shadow: 0 0 40px rgba(100,200,255,0.4);
@@ -617,10 +618,16 @@
             transition: opacity 0.5s ease;
         }
         body.ml-calibrating #tutorial-overlay {
-            flex-direction: row;
-            justify-content: flex-start;
-            align-items: center;
-            padding-left: 10%;
+            /* The overlay still covers the whole screen */
+        }
+        body.ml-calibrating .tut-box {
+            position: absolute;
+            left: 5%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin: 0;
+            width: 40vw;
+            max-width: 400px;
         }
         #tutorial-overlay.hidden { opacity: 0; pointer-events: none; }
         .tut-box {
@@ -639,8 +646,6 @@
             align-items: center;
             box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(100, 200, 255, 0.05);
             position: relative;
-            overflow: hidden;
-            margin-right: auto;
         }
         .tut-box::before {
             content: '';
