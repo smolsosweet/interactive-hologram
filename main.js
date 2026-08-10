@@ -1,13 +1,4 @@
-const files = fs.readdirSync(userDataPath);
-            files.forEach(file => {
-                if (file.startsWith('gesture_mlp_temp_') && (file.endsWith('.xml') || file.endsWith('.bin'))) {
-                    const filePath = path.join(userDataPath, file);
-                    try {
-                        fs.unlinkSync(filePath);
-                        console.log(`[Main] Cleaned up old OpenVINO file: ${file}`);
-                    } catch(e) {}
-                }
-            });const { app, BrowserWindow, globalShortcut, dialog, screen, ipcMain } = require('electron')
+const { app, BrowserWindow, globalShortcut, dialog, screen, ipcMain } = require('electron')
 const path = require('path')
 const { autoUpdater } = require('electron-updater')
 
@@ -96,12 +87,14 @@ app.whenReady().then(() => {
             files.forEach(file => {
                 if (file.startsWith('gesture_mlp_temp_') && (file.endsWith('.xml') || file.endsWith('.bin'))) {
                     const filePath = path.join(userDataPath, file);
-                    fs.unlinkSync(filePath);
-                    console.log(`[Main] Cleaned up old OpenVINO file: ${file}`);
+                    try {
+                        fs.unlinkSync(filePath);
+                        console.log(`[Main] Cleaned up old OpenVINO file: ${file}`);
+                    } catch(e) {}
                 }
             });
         } catch (cleanupErr) {
-            console.error("[Main] Failed to clean up old temp files:", cleanupErr);
+            console.error("[Main] Failed to read dir:", cleanupErr);
         }
 
         // 2. Tạo file mới
