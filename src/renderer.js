@@ -541,7 +541,14 @@ function translateHUD(text) {
 function setGestureHUD(text) {
     if (text === 'undefined') return;
     const el = document.getElementById('hud-gesture');
-    if (el) el.textContent = translateHUD(text);
+    if (el) {
+        el.textContent = translateHUD(text);
+        if (text.includes('Geometric Overridden')) {
+            el.style.color = '#ff4444';
+        } else {
+            el.style.color = '';
+        }
+    }
 }
 function setProgressHUD(pct) {
     const bar = document.getElementById('hud-progress-fill');
