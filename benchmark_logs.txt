@@ -318,3 +318,4 @@
 [2026-08-10T14:01:27.010Z] Engine: OpenVINO | Net: Online | T: -1786370244s | FPS: 134 | Latency: 2.0ms | RAM: 14.7MB
 [2026-08-10T14:01:37.016Z] Engine: OpenVINO | Net: Online | T: -1786370234s | FPS: 125 | Latency: 2.0ms | RAM: 15.4MB
 [2026-08-10T14:01:47.022Z] Engine: OpenVINO | Net: Online | T: -1786370224s | FPS: 117 | Latency: 2.0ms | RAM: 18.3MB
+[2026-08-11T12:59:07.793Z] Engine: TF.js | Net: Online | T: -1786453066s | FPS: 43 | Latency: 0ms | RAM: 8.6MB
