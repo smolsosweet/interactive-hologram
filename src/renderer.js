@@ -417,6 +417,7 @@ focusSpinner.add(centerDot);
 window.addEventListener('DOMContentLoaded', () => {
     const overlay = document.getElementById('debug-overlay');
     if (overlay) overlay.style.display = 'block';
+    if (typeof window.setAppLang === 'function') window.setAppLang('en');
     if (typeof window.initMLTutorial === 'function') window.initMLTutorial();
 });
 setTimeout(() => {
@@ -467,6 +468,8 @@ function updateHUD() {
 }
 const HUD_TRANSLATIONS = {
     'en': {
+        '🚀 Chuyển sang OpenVINO': '🚀 Switched to OpenVINO',
+        '🔄 Chuyển sang TF.js': '🔄 Switched to TF.js',
         'ĐÃ LƯU VỊ TRÍ': 'POSITION SAVED',
         'ĐÃ RESET VỀ MẶC ĐỊNH!': 'RESET TO DEFAULT!',
         'DI CHUYỂN (2 NẮM TAY)': 'MOVE (2 FISTS)',
@@ -538,8 +541,17 @@ function translateHUD(text) {
     return t;
 }
 
-function setGestureHUD(text) {
+let hudOverrideUntil = 0;
+function setGestureHUD(text, overrideMs = 0) {
     if (text === 'undefined') return;
+    const now = Date.now();
+    if (overrideMs > 0) {
+        hudOverrideUntil = now + overrideMs;
+    } else if (now < hudOverrideUntil && text === '') {
+        return; 
+    } else if (now < hudOverrideUntil && !text.includes('Geometric Overridden')) {
+        return; 
+    }
     const el = document.getElementById('hud-gesture');
     if (el) {
         el.textContent = translateHUD(text);
@@ -643,7 +655,7 @@ window.UI_I18N = {
     }
 };
 
-window.currentAppLang = 'vi';
+window.currentAppLang = 'en';
 
 window.setAppLang = function(lang) {
     window.currentAppLang = lang;
@@ -2058,7 +2070,7 @@ window.executeHotkey = function(key) {
         if (hudEngine) {
             hudEngine.textContent = window.useOpenVINO ? "OpenVINO" : "TF.js";
         }
-        setGestureHUD(window.useOpenVINO ? "🚀 Chuyển sang OpenVINO" : "🔄 Chuyển sang TF.js");
+        setGestureHUD(window.useOpenVINO ? "🚀 Chuyển sang OpenVINO" : "🔄 Chuyển sang TF.js", 3000);
     } else if (key === 'l') {
         if (typeof window.showLearningAnalytics === 'function') {
             window.showLearningAnalytics();
